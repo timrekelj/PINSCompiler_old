@@ -58,6 +58,203 @@ public class Lexer {
     public List<Symbol> scan() {
         var symbols = new ArrayList<Symbol>();
         // todo: implementacija leksikalne analize
+        
+        var word = "";
+        int startCol = 1;
+        int startLine = 1;
+        int wordLen = 0;
+        int wordHeight = 0;
+        boolean isComment = false;
+        boolean isString = false;
+
+        for(int i = 0; i < source.length(); i++) {
+            char c = source.charAt(i);
+
+            if (isComment && !((int)c == 10 || (int)c == 13)) {
+                startCol++;
+                continue;
+            } else if (isString) {
+                // implement strings
+            }
+
+            switch(c) {
+                case (char)32:                // Space
+                    startCol++;
+                    word = "";
+                    break;
+                case (char)9:                 // Tabulator
+                    startCol += 4;
+                    word = "";
+                    break;
+                case (char)10:                // New line
+                // case (char)13:                Če iščemo še \r bo pri windowsih vse zakompliciral
+                    isComment = false;
+                    startCol = 1;
+                    startLine++;
+                    word = "";
+                    break;
+                case '#':
+                    isComment = true;
+                    break;
+                case '\'':
+                    if (!isString) {
+                        word = "";
+                        isString = true;
+                        continue;
+                    } else {
+                        isString = false;
+                        symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, startCol + wordLen)), C_STRING, word));
+                        word = "";
+                        continue;
+                    }
+                    // break;
+                case '$':
+                    symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), EOF, "$"));
+                    break;
+                case '+':
+                    word = "";
+                    symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), OP_ADD, "+"));
+                    startCol++;
+                    break;
+                case '-':
+                    word = "";
+                    symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), OP_ADD, "-"));
+                    startCol++;
+                    break;
+                case '*':
+                    word = "";
+                    symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), OP_MUL, "*"));
+                    startCol++;
+                    break;
+                case '/':
+                    word = "";
+                    symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), OP_DIV, "/"));
+                    startCol++;
+                    break;
+                case '%':
+                    word = "";
+                    symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), OP_MOD, "%"));
+                    startCol++;
+                    break;
+                case '&':
+                    word = "";
+                    symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), OP_AND, "&"));
+                    startCol++;
+                    break;
+                case '|':
+                    word = "";
+                    symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), OP_OR, "|"));
+                    startCol++;
+                    break;
+                case '!':
+                    word = "";
+                    if (source.charAt(i + 1) == '=') {
+                        word = "!";
+                        wordLen++;
+                        continue;
+                    }
+                    symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), OP_NOT, "!"));
+                    startCol++;
+                    break;
+                case '<':
+                    word = "";
+                    if (source.charAt(i + 1) == '=') {
+                        word = "<";
+                        wordLen++;
+                        continue;
+                    }
+                    symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), OP_LT, "<"));
+                    startCol++;
+                    break;
+                case '>':
+                    word = "";
+                    if (source.charAt(i + 1) == '=') {
+                        word = ">";
+                        wordLen++;
+                        continue;
+                    }
+                    symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), OP_GT, ">"));
+                    startCol++;
+                    break;
+                case '(':
+                    word = "";
+                    symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), OP_LPARENT, "("));
+                    startCol++;
+                    break;
+                case ')':
+                    word = "";
+                    symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), OP_RPARENT, ")"));
+                    startCol++;
+                    break;
+                case '{':
+                    word = "";
+                    symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), OP_LBRACE, "{"));
+                    startCol++;
+                    break;
+                case '}':
+                    word = "";
+                    symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), OP_RBRACE, "}"));
+                    startCol++;
+                    break;
+                case '[':
+                    word = "";
+                    symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), OP_LBRACKET, "["));
+                    startCol++;
+                    break;
+                case ']':
+                    word = "";
+                    symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), OP_RBRACKET, "]"));
+                    startCol++;
+                    break;
+                case ':':
+                    word = "";
+                    symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), OP_COLON, ":"));
+                    startCol++;
+                    break;
+                case ';':
+                    word = "";
+                    symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), OP_SEMICOLON, ";"));
+                    startCol++;
+                    break;
+                case '.':
+                    word = "";
+                    symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), OP_DOT, "."));
+                    startCol++;
+                    break;
+                case ',':
+                    word = "";
+                    symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), OP_COMMA, ","));
+                    startCol++;
+                    break;
+                case '=':
+                    if (word.length() == 1) {
+                        if (word == "!") {
+                            symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, startCol + wordLen)), OP_NEQ, "!="));
+                        } else if (word == "=") {
+                            symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, startCol + wordLen)), OP_EQ, "=="));
+                        } else if (word == "<") {
+                            symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, startCol + wordLen)), OP_LEQ, "<="));
+                        } else if (word == ">") {
+                            symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, startCol + wordLen)), OP_GEQ, ">="));
+                        }
+                        word = "";
+                        continue;
+                    }
+                    if (source.charAt(i + 1) == '=') {
+                        word = "=";
+                        continue;
+                    }
+
+                    symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), OP_ASSIGN, "="));
+
+                    break;
+                default:
+                    // aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+                    break;
+            }
+        }
+
+
         return symbols;
     }
 }
