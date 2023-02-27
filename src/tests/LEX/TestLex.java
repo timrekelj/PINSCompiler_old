@@ -3,6 +3,7 @@ package tests.LEX;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Scanner;
 import compiler.lexer.Lexer;
 
@@ -10,28 +11,30 @@ public class TestLex {
     public static void main(String[] args) {
 
         // get number of test files
-        int numberOfTests = getNumberOfTests();
+        String[] tests = getTestNames();
 
         // delete all .err files inside Tests/LEX
         deleteErrFiles();
 
         // run tests
-        runTest(numberOfTests);
+        runTest(tests);
     }
 
     /**
      * Counts the number of all files inside test folder
-     * @return number of test files
+     * @return names of test files
      */
-    private static int getNumberOfTests() {
-        int numberOfTests = 0;
-        try {
-            numberOfTests = new File("src/tests/LEX").list().length / 2;
-        } catch (NullPointerException e) {
-            System.out.println("Folder not found!");
-            System.exit(1);
+    private static String[] getTestNames() {
+        String[] allFiles = new File("src/tests/LEX").list();
+        var tests = new ArrayList<String>();
+
+        for (String file : allFiles) {
+            if (file.endsWith(".pins")) {
+                tests.add(file.replace(".pins", ""));
+            }
         }
-        return numberOfTests;
+
+        return tests.toArray(String[]::new);
     }
 
     /**
@@ -53,27 +56,27 @@ public class TestLex {
      * Runs all tests
      * @param numberOfTests number of tests inside current folder
      */
-    private static void runTest(int numberOfTests) {
+    private static void runTest(String[] tests) {
         String output = "";
         String expected = "";
         double countOK = 0;
 
-        for (int i = 1; i <= numberOfTests; i++) {
-            output = getOutput(i);
-            expected = readFile("src/tests/LEX/test" + String.format("%02d", i) + ".out");
-            System.out.print("Test" + String.format("%02d", i) + ": ");
+        for (int i = 0; i < tests.length; i++) {
+            output = getOutput(tests[i]);
+            expected = readFile("src/tests/LEX/" + tests[i] + ".out");
+            System.out.print("Test " + tests[i] + ": ");
             if (output.equals(expected)) {
                 countOK++;
                 System.out.println("OK");
             } else {
                 System.out.println("FAIL");
-                System.out.println("Compare files: src/tests/LEX/test" + String.format("%02d", i) + ".out and src/tests/LEX/test" + String.format("%02d", i) + ".err");
-                writeErrFile(output, i);
+                System.out.println("Compare files: src/tests/LEX/" + tests[i] + ".out and src/tests/LEX/" + tests[i] + ".err");
+                writeErrFile(output, tests[i]);
             }
         }
 
         // print ration
-        System.out.println("Passed: " + (int)countOK + "/" + numberOfTests + "; " + String.format("%.2f", countOK / numberOfTests * 100) + "%");
+        System.out.println("Passed: " + (int)countOK + "/" + tests.length + "; " + String.format("%.2f", countOK / tests.length * 100) + "%");
     }
 
     /**
@@ -81,8 +84,8 @@ public class TestLex {
      * @param testNumber ID number of the test
      * @return output produced by the program
      */
-    private static String getOutput(int testNumber) {
-        String input = readFile("src/tests/LEX/test" + String.format("%02d", testNumber) + ".pins");
+    private static String getOutput(String test) {
+        String input = readFile("src/tests/LEX/" + test + ".pins");
         var symbols = new Lexer(input).scan();
         StringBuilder output = new StringBuilder();
         for (var symbol : symbols) {
@@ -119,15 +122,15 @@ public class TestLex {
      * @param output output produced by the program
      * @param testNum ID number of the test
      */
-    private static void writeErrFile(String output, int testNum) {
+    private static void writeErrFile(String output, String test) {
         try {
-            File file = new File("src/tests/LEX/test" + String.format("%02d", testNum) + ".err");
+            File file = new File("src/tests/LEX/" + test + ".err");
             file.createNewFile();
             FileWriter writer = new FileWriter(file);
             writer.write(output.strip());
             writer.close();
         } catch (IOException e) {
-            System.out.println("Error while writing file!\nFilename: test" + String.format("%02d", testNum) + ".err");
+            System.out.println("Error while writing file!\nFilename: " + String.format("%02d", test) + ".err");
             System.exit(1);
         }
     }

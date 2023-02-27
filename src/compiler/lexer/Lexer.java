@@ -57,50 +57,120 @@ public class Lexer {
      */
     public List<Symbol> scan() {
         var symbols = new ArrayList<Symbol>();
-        // todo: implementacija leksikalne analize
         
+        char c;
+        char next;
         var word = "";
         int startCol = 1;
         int startLine = 1;
+        int stringLen = 0;
         boolean isComment = false;
         boolean isString = false;
+        boolean isNum = false;
+        boolean isTokenWord = false;
 
         for(int i = 0; i < source.length(); i++) {
-            char c = source.charAt(i);
+            c = source.charAt(i);
 
+            // Comments
             if (isComment && !((int)c == 10 || (int)c == 13)) {
                 startCol++;
                 continue;
-            } else if (isString) {
+            }
+
+            // Strings
+            else if (isString) {
                 if((int)c >= 32 && (int)c <= 126) {
+                    // handle ' in string
                     if ((int)c == '\'') {
+                        // if there are two ' in a row
                         if(i < (source.length()-1) && (int)source.charAt(i+1) == '\'') {
+                            stringLen += 2;
                             word += '\'';
                             i++;
                             continue;
                         }
+                        // ending string
                         isString = false;
-                        symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, startCol + word.length() + 2)), C_STRING, word));
+                        stringLen++;
+                        symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, startCol + stringLen - 1)), C_STRING, word));
+                        startCol += stringLen;
                         word = "";
                         continue;
                     }
+
+                    // normal string character
                     word += c;
+                    stringLen++;
                     continue;
                 } else {
+                    // if wrong character
                     Report.error(Position.fromLocation(new Location(startLine, startCol)), "String does not support this type of character");
                 }
             }
 
+            // Numbers
+            else if (c >= '0' && c <= '9' && !isTokenWord) {
+                if (isNum) {
+
+                    // When there is no next integer or when the next char is the end of file
+                    if (i < (source.length() - 1) && !((char)source.charAt(i + 1) >= '0' && (char)source.charAt(i + 1) <= '9') || i == source.length() - 1) {
+                        word += c;
+                        symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, startCol + word.length() - 1)), C_INTEGER, word));
+                        isNum = false;
+                        startCol += word.length();
+                        word = "";
+                        continue;
+                    }
+
+                    // Normal integer
+                    word += c;
+                    continue;
+                }
+
+                // Start number
+                if (word == "") {
+                    isNum = true;
+                    word = "" + c;
+                    continue;
+                }
+            }
+
+            // Words 
+            else if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_') {
+                if (word == "") {
+                    isTokenWord = true;
+                }
+                word += c;
+                if (i < source.length() - 1) {
+                    next = source.charAt(i + 1);
+
+                    if ((!(next >= 'a' && next <= 'z') && !(next >= 'A' && next <= 'Z') && !(next >= '0' && next <= '9') && next != '_')) {
+                        symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, startCol + word.length() - 1)), IDENTIFIER, word));
+                        startCol += word.length();
+                        word = "";
+                        isTokenWord = false;
+                       // check which word it is 
+                    }
+                } else {
+                    symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, startCol + word.length() - 1)), IDENTIFIER, word));
+                    isTokenWord = false;
+                    startCol += word.length();
+                    word = "";
+                }
+            }
+
+            // 1 and 2 char symbols + string and comment start
             switch(c) {
-                case (char)32:                // Space
+                case ' ':
                     startCol++;
                     word = "";
                     break;
-                case (char)9:                 // Tab
+                case '\t':
                     startCol += 4;
                     word = "";
                     break;
-                case (char)10:                // New line (we don't do \r here)
+                case '\n':              // (we don't do \r here)
                     isComment = false;
                     startCol = 1;
                     startLine++;
@@ -111,8 +181,8 @@ public class Lexer {
                     break;
                 case '\'':
                     word = "";
+                    stringLen = 1;
                     isString = true;
-                    
                     break;
                 case '$':
                     symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), EOF, "$"));
@@ -154,7 +224,7 @@ public class Lexer {
                     break;
                 case '!':
                     word = "";
-                    if (source.charAt(i + 1) == '=') {
+                    if (i < (source.length() - 1) && source.charAt(i + 1) == '=') {
                         word = "!";
                         continue;
                     }
@@ -163,7 +233,7 @@ public class Lexer {
                     break;
                 case '<':
                     word = "";
-                    if (source.charAt(i + 1) == '=') {
+                    if (i < (source.length()-1) && source.charAt(i + 1) == '=') {
                         word = "<";
                         continue;
                     }
@@ -172,7 +242,7 @@ public class Lexer {
                     break;
                 case '>':
                     word = "";
-                    if (source.charAt(i + 1) == '=') {
+                    if (i < (source.length()-1) && source.charAt(i + 1) == '=') {
                         word = ">";
                         continue;
                     }
@@ -244,21 +314,19 @@ public class Lexer {
                         startCol += 2;
                         continue;
                     }
-                    if (source.charAt(i + 1) == '=') {
+                    if (i < (source.length()-1) && source.charAt(i + 1) == '=') {
                         word = "=";
-                        startCol++;
                         continue;
                     }
 
                     symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), OP_ASSIGN, "="));
+                    startCol++;
 
-                    break;
-                default:
-                    // aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
                     break;
             }
         }
-
+        symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), EOF, "$"));
+        
 
         return symbols;
     }
