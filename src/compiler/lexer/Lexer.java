@@ -62,7 +62,6 @@ public class Lexer {
         var word = "";
         int startCol = 1;
         int startLine = 1;
-        int wordLen = 0;
         boolean isComment = false;
         boolean isString = false;
 
@@ -81,11 +80,10 @@ public class Lexer {
                             continue;
                         }
                         isString = false;
-                        symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, startCol + wordLen)), C_STRING, word));
+                        symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, startCol + word.length() + 2)), C_STRING, word));
                         word = "";
                         continue;
                     }
-                    startCol++;
                     word += c;
                     continue;
                 } else {
@@ -114,6 +112,7 @@ public class Lexer {
                 case '\'':
                     word = "";
                     isString = true;
+                    
                     break;
                 case '$':
                     symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), EOF, "$"));
@@ -157,7 +156,6 @@ public class Lexer {
                     word = "";
                     if (source.charAt(i + 1) == '=') {
                         word = "!";
-                        wordLen++;
                         continue;
                     }
                     symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), OP_NOT, "!"));
@@ -167,7 +165,6 @@ public class Lexer {
                     word = "";
                     if (source.charAt(i + 1) == '=') {
                         word = "<";
-                        wordLen++;
                         continue;
                     }
                     symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), OP_LT, "<"));
@@ -177,7 +174,6 @@ public class Lexer {
                     word = "";
                     if (source.charAt(i + 1) == '=') {
                         word = ">";
-                        wordLen++;
                         continue;
                     }
                     symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), OP_GT, ">"));
@@ -236,19 +232,21 @@ public class Lexer {
                 case '=':
                     if (word.length() == 1) {
                         if (word == "!") {
-                            symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, startCol + wordLen)), OP_NEQ, "!="));
+                            symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, startCol + word.length())), OP_NEQ, "!="));
                         } else if (word == "=") {
-                            symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, startCol + wordLen)), OP_EQ, "=="));
+                            symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, startCol + word.length())), OP_EQ, "=="));
                         } else if (word == "<") {
-                            symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, startCol + wordLen)), OP_LEQ, "<="));
+                            symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, startCol + word.length())), OP_LEQ, "<="));
                         } else if (word == ">") {
-                            symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, startCol + wordLen)), OP_GEQ, ">="));
+                            symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, startCol + word.length())), OP_GEQ, ">="));
                         }
                         word = "";
+                        startCol += 2;
                         continue;
                     }
                     if (source.charAt(i + 1) == '=') {
                         word = "=";
+                        startCol++;
                         continue;
                     }
 
