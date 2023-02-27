@@ -63,7 +63,6 @@ public class Lexer {
         int startCol = 1;
         int startLine = 1;
         int wordLen = 0;
-        int wordHeight = 0;
         boolean isComment = false;
         boolean isString = false;
 
@@ -74,7 +73,24 @@ public class Lexer {
                 startCol++;
                 continue;
             } else if (isString) {
-                // implement strings
+                if((int)c >= 32 && (int)c <= 126) {
+                    if ((int)c == '\'') {
+                        if(i < (source.length()-1) && (int)source.charAt(i+1) == '\'') {
+                            word += '\'';
+                            i++;
+                            continue;
+                        }
+                        isString = false;
+                        symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, startCol + wordLen)), C_STRING, word));
+                        word = "";
+                        continue;
+                    }
+                    startCol++;
+                    word += c;
+                    continue;
+                } else {
+                    Report.error(Position.fromLocation(new Location(startLine, startCol)), "String does not support this type of character");
+                }
             }
 
             switch(c) {
@@ -82,12 +98,11 @@ public class Lexer {
                     startCol++;
                     word = "";
                     break;
-                case (char)9:                 // Tabulator
+                case (char)9:                 // Tab
                     startCol += 4;
                     word = "";
                     break;
-                case (char)10:                // New line
-                // case (char)13:                Če iščemo še \r bo pri windowsih vse zakompliciral
+                case (char)10:                // New line (we don't do \r here)
                     isComment = false;
                     startCol = 1;
                     startLine++;
@@ -97,17 +112,9 @@ public class Lexer {
                     isComment = true;
                     break;
                 case '\'':
-                    if (!isString) {
-                        word = "";
-                        isString = true;
-                        continue;
-                    } else {
-                        isString = false;
-                        symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, startCol + wordLen)), C_STRING, word));
-                        word = "";
-                        continue;
-                    }
-                    // break;
+                    word = "";
+                    isString = true;
+                    break;
                 case '$':
                     symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), EOF, "$"));
                     break;
