@@ -9,6 +9,7 @@
             "name": "Test Compiler",
             "request": "launch",
             "mainClass": "tests.Test",
+            "args": "TEST --folder LEX"
         },
         {
             "type": "java",
