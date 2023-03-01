@@ -93,7 +93,7 @@ public class Lexer {
                         // ending string
                         isString = false;
                         stringLen++;
-                        symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, startCol + stringLen - 1)), C_STRING, word));
+                        symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, startCol + stringLen)), C_STRING, word));
                         startCol += stringLen;
                         word = "";
                         continue;
@@ -105,7 +105,7 @@ public class Lexer {
                     continue;
                 } else {
                     // if wrong character
-                    Report.error(Position.fromLocation(new Location(startLine, startCol)), "String does not support this type of character");
+                    Report.error(Position.fromLocation(new Location(startLine, startCol + word.length() + 1)), "String does not support this type of character");
                 }
             }
 
@@ -116,7 +116,7 @@ public class Lexer {
                     // When there is no next integer or when the next char is the end of file
                     if (i < (source.length() - 1) && !((char)source.charAt(i + 1) >= '0' && (char)source.charAt(i + 1) <= '9') || i == source.length() - 1) {
                         word += c;
-                        symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, startCol + word.length() - 1)), C_INTEGER, word));
+                        symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, startCol + word.length())), C_INTEGER, word));
                         isNum = false;
                         startCol += word.length();
                         word = "";
@@ -142,21 +142,20 @@ public class Lexer {
                     isTokenWord = true;
                 }
                 word += c;
-                if (i < source.length() - 1) {
-                    next = source.charAt(i + 1);
 
-                    if ((!(next >= 'a' && next <= 'z') && !(next >= 'A' && next <= 'Z') && !(next >= '0' && next <= '9') && next != '_')) {
-                        symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, startCol + word.length() - 1)), IDENTIFIER, word));
-                        startCol += word.length();
-                        word = "";
-                        isTokenWord = false;
-                       // check which word it is 
-                    }
-                } else {
-                    symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, startCol + word.length() - 1)), IDENTIFIER, word));
-                    isTokenWord = false;
+                next = (i < source.length() - 1) ? source.charAt(i + 1) : '$';
+                if ((!(next >= 'a' && next <= 'z') && !(next >= 'A' && next <= 'Z') && !(next >= '0' && next <= '9') && next != '_')) {
+                    if (word.equals("true") || word.equals("false"))
+                        symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, startCol + word.length())), C_LOGICAL, word));
+                    else if (keywordMapping.containsKey(word))
+                        symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, startCol + word.length())), keywordMapping.get(word), word));
+                    else
+                        symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, startCol + word.length())), IDENTIFIER, word));
+
                     startCol += word.length();
                     word = "";
+                    isTokenWord = false;
+                    // check which word it is 
                 }
             }
 
@@ -185,42 +184,35 @@ public class Lexer {
                     isString = true;
                     break;
                 case '$':
-                    symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), EOF, "$"));
+                    symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, ++startCol)), EOF, "$"));
                     break;
                 case '+':
                     word = "";
-                    symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), OP_ADD, "+"));
-                    startCol++;
+                    symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, ++startCol)), OP_ADD, "+"));
                     break;
                 case '-':
                     word = "";
-                    symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), OP_ADD, "-"));
-                    startCol++;
+                    symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, ++startCol)), OP_SUB, "-"));
                     break;
                 case '*':
                     word = "";
-                    symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), OP_MUL, "*"));
-                    startCol++;
+                    symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, ++startCol)), OP_MUL, "*"));
                     break;
                 case '/':
                     word = "";
-                    symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), OP_DIV, "/"));
-                    startCol++;
+                    symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, ++startCol)), OP_DIV, "/"));
                     break;
                 case '%':
                     word = "";
-                    symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), OP_MOD, "%"));
-                    startCol++;
+                    symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, ++startCol)), OP_MOD, "%"));
                     break;
                 case '&':
                     word = "";
-                    symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), OP_AND, "&"));
-                    startCol++;
+                    symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, ++startCol)), OP_AND, "&"));
                     break;
                 case '|':
                     word = "";
-                    symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), OP_OR, "|"));
-                    startCol++;
+                    symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, ++startCol)), OP_OR, "|"));
                     break;
                 case '!':
                     word = "";
@@ -228,8 +220,7 @@ public class Lexer {
                         word = "!";
                         continue;
                     }
-                    symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), OP_NOT, "!"));
-                    startCol++;
+                    symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, ++startCol)), OP_NOT, "!"));
                     break;
                 case '<':
                     word = "";
@@ -237,8 +228,7 @@ public class Lexer {
                         word = "<";
                         continue;
                     }
-                    symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), OP_LT, "<"));
-                    startCol++;
+                    symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, ++startCol)), OP_LT, "<"));
                     break;
                 case '>':
                     word = "";
@@ -246,72 +236,61 @@ public class Lexer {
                         word = ">";
                         continue;
                     }
-                    symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), OP_GT, ">"));
-                    startCol++;
+                    symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, ++startCol)), OP_GT, ">"));
                     break;
                 case '(':
                     word = "";
-                    symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), OP_LPARENT, "("));
-                    startCol++;
+                    symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, ++startCol)), OP_LPARENT, "("));
                     break;
                 case ')':
                     word = "";
-                    symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), OP_RPARENT, ")"));
-                    startCol++;
+                    symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, ++startCol)), OP_RPARENT, ")"));
                     break;
                 case '{':
                     word = "";
-                    symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), OP_LBRACE, "{"));
-                    startCol++;
+                    symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, ++startCol)), OP_LBRACE, "{"));
                     break;
                 case '}':
                     word = "";
-                    symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), OP_RBRACE, "}"));
-                    startCol++;
+                    symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, ++startCol)), OP_RBRACE, "}"));
                     break;
                 case '[':
                     word = "";
-                    symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), OP_LBRACKET, "["));
-                    startCol++;
+                    symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, ++startCol)), OP_LBRACKET, "["));
                     break;
                 case ']':
                     word = "";
-                    symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), OP_RBRACKET, "]"));
-                    startCol++;
+                    symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, ++startCol)), OP_RBRACKET, "]"));
                     break;
                 case ':':
                     word = "";
-                    symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), OP_COLON, ":"));
-                    startCol++;
+                    symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, ++startCol)), OP_COLON, ":"));
                     break;
                 case ';':
                     word = "";
-                    symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), OP_SEMICOLON, ";"));
-                    startCol++;
+                    symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, ++startCol)), OP_SEMICOLON, ";"));
                     break;
                 case '.':
                     word = "";
-                    symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), OP_DOT, "."));
-                    startCol++;
+                    symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, ++startCol)), OP_DOT, "."));
                     break;
                 case ',':
                     word = "";
-                    symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), OP_COMMA, ","));
-                    startCol++;
+                    symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, ++startCol)), OP_COMMA, ","));
                     break;
                 case '=':
                     if (word.length() == 1) {
                         if (word == "!") {
-                            symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, startCol + word.length())), OP_NEQ, "!="));
+                            symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, startCol + 2)), OP_NEQ, "!="));
                         } else if (word == "=") {
-                            symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, startCol + word.length())), OP_EQ, "=="));
+                            symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, startCol + 2)), OP_EQ, "=="));
                         } else if (word == "<") {
-                            symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, startCol + word.length())), OP_LEQ, "<="));
+                            symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, startCol + 2)), OP_LEQ, "<="));
                         } else if (word == ">") {
-                            symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, startCol + word.length())), OP_GEQ, ">="));
+                            symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, startCol + 2)), OP_GEQ, ">="));
                         }
-                        word = "";
                         startCol += 2;
+                        word = "";
                         continue;
                     }
                     if (i < (source.length()-1) && source.charAt(i + 1) == '=') {
@@ -319,12 +298,13 @@ public class Lexer {
                         continue;
                     }
 
-                    symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), OP_ASSIGN, "="));
-                    startCol++;
+                    symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, ++startCol)), OP_ASSIGN, "="));
 
                     break;
             }
         }
+        if (isString)
+            Report.error("String not closed!!"); 
         symbols.add(new Symbol(Position.fromLocation(new Location(startLine, startCol)), EOF, "$"));
         
 

@@ -6,17 +6,16 @@
     "configurations": [
         {
             "type": "java",
-            "name": "Test LEX",
+            "name": "Test Compiler",
             "request": "launch",
-            "mainClass": "tests.LEX.TestLex",
-            "projectName": "PINSCompiler_723c246d"
+            "mainClass": "tests.Test",
         },
         {
             "type": "java",
             "name": "Launch LEX",
             "request": "launch",
             "mainClass": "Main",
-            "args": "PINS test.pins --dump LEX"
+            "args": "PINS quickTest.pins --dump LEX"
         }
     ]
 }

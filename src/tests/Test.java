@@ -1,4 +1,4 @@
-package tests.LEX;
+package tests;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.Scanner;
 import compiler.lexer.Lexer;
 
-public class TestLex {
+public class Test {
     public static void main(String[] args) {
 
         // get number of test files
