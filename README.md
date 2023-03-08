@@ -28,7 +28,7 @@
             "name": "Launch LEX",
             "request": "launch",
             "mainClass": "Main",
-            "args": "PINS quickTest.pins --dump LEX"
+            "args": "PINS quickTest.pins23 --dump LEX"
         }
     ]
 }

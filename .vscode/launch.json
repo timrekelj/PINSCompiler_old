@@ -13,24 +13,34 @@
         },
         {
             "type": "java",
-            "name": "Launch LEX",
+            "name": "Launch specific phase",
             "request": "launch",
             "mainClass": "Main",
-            "args": "PINS quickTest.pins23 --dump LEX"
+            "args": "PINS quickTest.pins23 --dump ${input:dump}"
         },
         {
             "type": "java",
-            "name": "Launch SYN",
+            "name": "Launch compiler",
             "request": "launch",
             "mainClass": "Main",
-            "args": "PINS quickTest.pins23 --dump SYN"
+            "args": "PINS quickTest.pins23"
         }
     ],
     "inputs": [
         {
             "id": "dump",
             "description": "the phase of compiler you want to run",
-            "type": "promptString"
+            "type": "pickString",
+            "options": [
+                "LEX",
+                "SYN",
+                "AST",
+                "NAME",
+                "TYP",
+                "FRM",
+                "IMC",
+                "INT",
+            ]
         }
     ]
 }
