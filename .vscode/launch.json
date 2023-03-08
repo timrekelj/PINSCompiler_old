@@ -6,10 +6,10 @@
     "configurations": [
         {
             "type": "java",
-            "name": "Test Compiler",
+            "name": "Tests",
             "request": "launch",
             "mainClass": "tests.Test",
-            "args": "TEST --folder LEX"
+            "args": "TEST --folder ${input:dump}"
         },
         {
             "type": "java",
@@ -17,6 +17,20 @@
             "request": "launch",
             "mainClass": "Main",
             "args": "PINS quickTest.pins23 --dump LEX"
+        },
+        {
+            "type": "java",
+            "name": "Launch SYN",
+            "request": "launch",
+            "mainClass": "Main",
+            "args": "PINS quickTest.pins23 --dump SYN"
+        }
+    ],
+    "inputs": [
+        {
+            "id": "dump",
+            "description": "the phase of compiler you want to run",
+            "type": "promptString"
         }
     ]
 }
