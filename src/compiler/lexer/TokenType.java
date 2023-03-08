@@ -9,7 +9,7 @@ public enum TokenType {
     /**
      * Konec datoteke.
      */
-    EOF,
+    EOF, //*
 
     /**
      * Ključne besede:
@@ -37,7 +37,7 @@ public enum TokenType {
      */
     C_LOGICAL, // logična konstanta (true/false)
     C_INTEGER, // celoštevilska konstanta
-    C_STRING,  // znakovna konstanta
+    C_STRING,  //* znakovna konstanta
 
     /**
      * Ime.
@@ -47,33 +47,33 @@ public enum TokenType {
     /**
      * Operatorji:
      */
-    OP_ADD,       // +
-    OP_SUB,       // -
-    OP_MUL,       // *
-    OP_DIV,       // /
-    OP_MOD,       // %
+    OP_ADD,       //* +
+    OP_SUB,       //* -
+    OP_MUL,       //* *
+    OP_DIV,       //* /
+    OP_MOD,       //* %
 
-    OP_AND,       // &
-    OP_OR,        // |
-    OP_NOT,       // !
+    OP_AND,       //* &
+    OP_OR,        //* |
+    OP_NOT,       //* !
     
-    OP_EQ,        // ==
-    OP_NEQ,       // !=
-    OP_LT,        // <
-    OP_GT,        // >
-    OP_LEQ,       // <=
-    OP_GEQ,       // >=
+    OP_EQ,        //* ==
+    OP_NEQ,       //* !=
+    OP_LT,        //* <
+    OP_GT,        //* >
+    OP_LEQ,       //* <=
+    OP_GEQ,       //* >=
 
-    OP_LPARENT,   // (
-    OP_RPARENT,   // )
-    OP_LBRACKET,  // [
-    OP_RBRACKET,  // ]
-    OP_LBRACE,    // {
-    OP_RBRACE,    // }
+    OP_LPARENT,   //* (
+    OP_RPARENT,   //* )
+    OP_LBRACKET,  //* [
+    OP_RBRACKET,  //* ]
+    OP_LBRACE,    //* {
+    OP_RBRACE,    //* }
 
-    OP_COLON,     // :
-    OP_SEMICOLON, // ;
-    OP_DOT,       // .
-    OP_COMMA,     // ,
-    OP_ASSIGN     // =
+    OP_COLON,     //* :
+    OP_SEMICOLON, //* ;
+    OP_DOT,       //* .
+    OP_COMMA,     //* ,
+    OP_ASSIGN     //* =
 }
