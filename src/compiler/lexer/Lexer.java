@@ -132,6 +132,15 @@ public class Lexer {
                 if (word == "") {
                     isNum = true;
                     word = "" + c;
+
+                    if (i < (source.length() - 1) && !((char)source.charAt(i + 1) >= '0' && (char)source.charAt(i + 1) <= '9') || i == source.length() - 1) {
+                        symbols.add(new Symbol(new Position(new Location(startLine, startCol), new Location(startLine, startCol + word.length())), C_INTEGER, word));
+                        isNum = false;
+                        startCol += word.length();
+                        word = "";
+                        continue;
+                    }
+
                     continue;
                 }
             }
