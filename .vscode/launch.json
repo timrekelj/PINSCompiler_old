@@ -16,7 +16,7 @@
             "name": "Launch specific phase",
             "request": "launch",
             "mainClass": "Main",
-            "args": "PINS quickTest.pins23 --dump ${input:dump}"
+            "args": "PINS quickTest.pins23 --exec ${input:dump} --dump ${input:dump}"
         },
         {
             "type": "java",

@@ -47,6 +47,7 @@ public class Main {
         if (cli.execPhase == Phase.LEX) {
             return;
         }
+        
         /**
          * Izvedi sintaksno analizo.
          */
