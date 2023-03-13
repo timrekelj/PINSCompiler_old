@@ -43,6 +43,7 @@ public class Parser {
     }
 
     private void parseSource() {
+        dump("source -> definitions");
         parseDefinitions();
     }
 
@@ -75,13 +76,13 @@ public class Parser {
 
     private void parseDefinitions_() {
         if (check(OP_SEMICOLON)) {
+            dump("definitions_ -> ; definitions");
             // skip ';'
             skip();
-            dump("definitions_ -> ; definitions");
             parseDefinitions();
-            return;
+        } else {
+            dump("definitions_ -> .");
         }
-        dump("definitions_ -> .");
     }
 
     private void parseDefinition() {
@@ -101,13 +102,13 @@ public class Parser {
 
     private void parseTypeDef() {
         // TODO: check for errors for wrong implementation of type definition
+        dump("type_definition -> typ identifier : type");
         // skip KW_TYP
         skip();
         // skip IDENTIFIER
         skip();
         // skip ':'
         skip();
-        dump("type_definition -> typ identifier : type");
         parseType();
     }
 
@@ -177,18 +178,18 @@ public class Parser {
             // skip ,
             skip();
             parseParameters();
-            return;
+        } else {
+            dump("parameters_ -> .");
         }
-        dump("parameters_ -> .");
     }
 
     private void parseParameter() {
         // TODO: check for wrong parameter use
+        dump("parameter -> identifier : type");
         // skip identifier
         skip();
         // skip :
         skip();
-        dump("parameter -> identifier : type");
         parseType();
     }
 
@@ -209,9 +210,9 @@ public class Parser {
             parseDefinitions();
             // skip }
             skip();
-            return;
+        } else {
+            dump("expression_ -> .");
         }
-        dump("expression_ -> .");
     }
 
     private void parseLogicalIorExpression() {
@@ -226,12 +227,13 @@ public class Parser {
             // skip |
             skip();
             parseLogicalIorExpression();
+        } else {
+            dump("logical_ior_expression_ -> .");
         }
-        dump("logical_ior_expression_ -> .");
     }
 
     private void parseLogicalAndExpression() {
-        dump("logical_ior_expression -> logical_and_expression logical_ior_expression_");
+        dump("logical_and_expression -> compare_expression logical_and_expression_");
         parseCompareExpression();
         parseLogicalAndExpression_();
     }
@@ -242,12 +244,13 @@ public class Parser {
             // skip &
             skip();
             parseLogicalAndExpression();
+        } else {
+            dump("logical_and_expression_ -> .");
         }
-        dump("logical_and_expression_ -> .");
     }
 
     private void parseCompareExpression() {
-        dump("compare_expression -> additive_expression compare_expression");
+        dump("compare_expression -> additive_expression compare_expression_");
         parseAdditiveExpression();
         parseCompareExpression_();
     }
@@ -263,22 +266,22 @@ public class Parser {
             // skip !=
             skip();
             parseAdditiveExpression();
-        } else if (check(OP_NEQ)) {
+        } else if (check(OP_LEQ)) {
             dump("compare_expression_ -> <= additive_expression");
             // skip <=
             skip();
             parseAdditiveExpression();
-        } else if (check(OP_NEQ)) {
+        } else if (check(OP_GEQ)) {
             dump("compare_expression_ -> >= additive_expression");
             // skip >=
             skip();
             parseAdditiveExpression();
-        } else if (check(OP_NEQ)) {
+        } else if (check(OP_LT)) {
             dump("compare_expression_ -> < additive_expression");
             // skip <
             skip();
             parseAdditiveExpression();
-        } else if (check(OP_NEQ)) {
+        } else if (check(OP_GT)) {
             dump("compare_expression_ -> > additive_expression");
             // skip >
             skip();
@@ -317,14 +320,14 @@ public class Parser {
     }
 
     private void parseMultiplicativeExpression_() {
-        if (check(OP_ADD)) {
-            dump("multiplicative_expression_ -> + multiplicative_expression");
-            // skip +
+        if (check(OP_MUL)) {
+            dump("multiplicative_expression_ -> * multiplicative_expression");
+            // skip *
             skip();
             parseMultiplicativeExpression();
-        } else if (check(OP_SUB)) {
-            dump("multiplicative_expression_ -> - multiplicative_expression");
-            // skip -
+        } else if (check(OP_DIV)) {
+            dump("multiplicative_expression_ -> / multiplicative_expression");
+            // skip /
             skip();
             parseMultiplicativeExpression();
         } else if (check(OP_MOD)) {
@@ -355,17 +358,17 @@ public class Parser {
             parsePrefixExpression();
         } else {
             dump("prefix_expression -> postfix_expression");
-            parsePostdfixExpression();
+            parsePostfixExpression();
         }
     }
 
-    private void parsePostdfixExpression() {
+    private void parsePostfixExpression() {
         dump("postfix_expression -> atom_expression postfix_expression_");
         parseAtomExpression();
-        parsePostdfixExpression_();
+        parsePostfixExpression_();
     }
 
-    private void parsePostdfixExpression_() {
+    private void parsePostfixExpression_() {
         if (check(OP_LBRACKET)) {
             // TODO: check for error
             dump("postfix_expression -> [ expression ] postfix_expression");
@@ -374,23 +377,103 @@ public class Parser {
             parseExpression();
             // skip ]
             skip();
-            parsePostdfixExpression();
+            parsePostfixExpression();
         } else {
-            dump("postfix_expression -> .");
+            dump("postfix_expression_ -> .");
         }
     }
 
     private void parseAtomExpression() {
         if (check(C_LOGICAL)) {
-
+            dump("atom_expression -> log_constant");
+            // skip log_constant
+            skip();
         } else if (check(C_INTEGER)) {
-
+            dump("atom_expression -> int_constant");
+            // skip int_constant
+            skip();
         } else if (check(C_STRING)) {
-            
+            dump("atom_expression -> str_constant");
+            // skip str_constant
+            skip();
         } else if (check(IDENTIFIER)) {
-            
+            // skip identifier
+            skip();
+            if (check(OP_LBRACE)) {
+                // TODO: check for wrong atom expression
+                dump("atom_expression -> identifier { expression }");
+                // skip {
+                skip();
+                parseExpression();
+                // skip }
+                skip();
+            } else {
+                dump("atom_expression -> identifier");
+            }
         } else if (check(OP_LBRACE)) {
+            // skip {
+            skip();
+            if (check(KW_IF)) {
+                // skip if
+                skip();
+                parseExpression();
+                //skip then
+                skip();
+                parseExpression();
+                if (check(KW_ELSE)) {
+                    dump("atom_expression -> { if expression then expression else expression }");
+                    // skip else
+                    skip();
+                    parseExpression();
+                    // skip }
+                    skip();
+                } else {
+                    dump("atom_expression -> { if expression then expression }");
+                    // skip }
+                    skip();
+                }
+            } else if (check(KW_WHILE)) {
+                dump("atom_expression -> { while expression : expression }");
+                // skip while
+                skip();
+                parseExpression();
+                // skip :
+                skip();
+                parseExpression();
+                // skip }
+                skip();
+            } else if (check(KW_FOR)) {
+                dump("atom_expression -> { for identifier = expression , expression , expression : expression }");
+                // skip for
+                skip();
+                // skip identifier
+                skip();
+                // skip =
+                skip();
+                parseExpression();
+                // skip ,
+                skip();
+                parseExpression();
+                // skip ,
+                skip();
+                parseExpression();
+                // skip :
+                skip();
+                parseExpression();
+                // skip }
+                skip();
 
+            } else {
+                dump("");
+            }
+        } else if (check(OP_LPARENT)) {
+            // TODO: check for errors
+            dump("atom_expression -> ( expressions )");
+            // skip (
+            skip();
+            parseExpressions();
+            //skip )
+            skip();
         }
     }
 
