@@ -1,1 +1,1 @@
-fun f (x : string) : logical = x + 4
+typ x: 

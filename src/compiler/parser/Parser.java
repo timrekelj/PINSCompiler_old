@@ -64,6 +64,13 @@ public class Parser {
         symbols.remove(0);
     }
 
+    private void errorExpected(String expected) {
+        if (symbols.get(0).lexeme == "$") {
+            Report.error(symbols.get(0).position, "expected " + expected + ", got EOF");
+        }
+        Report.error(symbols.get(0).position, "expected " + expected + ", got " + symbols.get(0).lexeme);
+    }
+
     /**
      * Implementacija rekurzivnega spuščanja
      */
@@ -96,18 +103,23 @@ public class Parser {
             dump("definition -> variable_definition");
             parseVarDef();
         } else {
-            // TODO: throw error if there is something else in place of definition type
+            errorExpected("type, function or variable definition");
         }
     }
 
     private void parseTypeDef() {
-        // TODO: check for errors for wrong implementation of type definition
         dump("type_definition -> typ identifier : type");
         // skip KW_TYP
         skip();
         // skip IDENTIFIER
+        if (!check(IDENTIFIER)) {
+            errorExpected("identifier");
+        }
         skip();
         // skip ':'
+        if (!check(OP_COLON)) {
+            errorExpected(":");
+        }
         skip();
         parseType();
     }
@@ -130,19 +142,30 @@ public class Parser {
             // skip string
             skip();
         } else if (check(KW_ARR)) {
-            // TODO: check for wrong array implementation
             dump("type -> arr [ int_const ] type");
             // skip 'arr'
+            if (!check(KW_ARR)) {
+                errorExpected("arr");
+            }
             skip();
             // skip '['
+            if (!check(OP_LBRACKET)) {
+                errorExpected("[");
+            }
             skip();
             // skip 'int_const'
+            if (!check(C_INTEGER)) {
+                errorExpected("int constant");
+            }
             skip();
             // skip ']'
+            if (!check(OP_RBRACKET)) {
+                errorExpected("]");
+            }
             skip();
             parseType();
         } else {
-            // TODO: throw error if there is something else in the place of type
+            errorExpected("identifier, logical, integer, string or array");
         }
     }
 
