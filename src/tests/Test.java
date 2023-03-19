@@ -56,8 +56,8 @@ public class Test {
         var tests = new ArrayList<String>();
 
         for (String file : allFiles) {
-            if (file.endsWith(".pins")) {
-                tests.add(file.replace(".pins", ""));
+            if (file.endsWith(".pins23")) {
+                tests.add(file.replace(".pins23", ""));
             }
         }
 
@@ -115,7 +115,7 @@ public class Test {
      * @return output produced by the program
      */
     private static String getOutput(String test, String folder) {
-        String input = readFile("src/tests/" + folder + "/" + test + ".pins");
+        String input = readFile("src/tests/" + folder + "/" + test + ".pins23");
         var symbols = new Lexer(input).scan();
         StringBuilder output = new StringBuilder();
         for (var symbol : symbols) {

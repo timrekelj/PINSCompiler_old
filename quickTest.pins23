@@ -1,1 +1,1 @@
-typ x: 
+fun id ( neki : integer ) : integer = ({x = 10}, x) {where fun id ( neki : integer ) : integer = ({x = 10}, x)}

@@ -28,11 +28,13 @@ public class Parser {
      * vrednost opcijske spremenljivke nastavimo na Optional.empty().
      */
     private final Optional<PrintStream> productionsOutputStream;
+    private int index;
 
     public Parser(List<Symbol> symbols, Optional<PrintStream> productionsOutputStream) {
         requireNonNull(symbols, productionsOutputStream);
         this.symbols = symbols;
         this.productionsOutputStream = productionsOutputStream;
+        this.index = 0;
     }
 
     /**
@@ -57,18 +59,18 @@ public class Parser {
     }
 
     private boolean check(TokenType token) {
-        return symbols.get(0).tokenType == token;
+        return symbols.get(index).tokenType == token;
     }
 
     private void skip() {
-        symbols.remove(0);
+        index++;
     }
 
     private void errorExpected(String expected) {
         if (symbols.get(0).lexeme == "$") {
-            Report.error(symbols.get(0).position, "expected " + expected + ", got EOF");
+            Report.error(symbols.get(index).position, "expected " + expected + ", got EOF");
         }
-        Report.error(symbols.get(0).position, "expected " + expected + ", got " + symbols.get(0).lexeme);
+        Report.error(symbols.get(index).position, "expected " + expected + ", got " + symbols.get(index).lexeme);
     }
 
     /**
@@ -144,9 +146,6 @@ public class Parser {
         } else if (check(KW_ARR)) {
             dump("type -> arr [ int_const ] type");
             // skip 'arr'
-            if (!check(KW_ARR)) {
-                errorExpected("arr");
-            }
             skip();
             // skip '['
             if (!check(OP_LBRACKET)) {
@@ -170,21 +169,35 @@ public class Parser {
     }
 
     private void parseFunctionDef() {
-        // TODO: throw error for wrong function definition
-        dump("function_definition -> 'fun' 'identifier' '(' parameters ')' ':' type '=' expression");
+        dump("function_definition -> fun identifier ( parameters ) : type = expression");
         // skip fun
         skip();
         // skip identifier
+        if (!check(IDENTIFIER)) {
+            errorExpected("identifier");
+        }
         skip();
         // skip (
+        if (!check(OP_LPARENT)) {
+            errorExpected("(");
+        }
         skip();
         parseParameters();
         // skip )
+        if (!check(OP_RPARENT)) {
+            errorExpected(")");
+        }
         skip();
         // skip :
+        if (!check(OP_COLON)) {
+            errorExpected(":");
+        }
         skip();
         parseType();
         // skip =
+        if (!check(OP_ASSIGN)) {
+            errorExpected("=");
+        }
         skip();
         parseExpression();
     }
@@ -207,11 +220,16 @@ public class Parser {
     }
 
     private void parseParameter() {
-        // TODO: check for wrong parameter use
         dump("parameter -> identifier : type");
         // skip identifier
+        if (!check(IDENTIFIER)) {
+            errorExpected("identifier");
+        }
         skip();
         // skip :
+        if (!check(OP_COLON)) {
+            errorExpected(":");
+        }
         skip();
         parseType();
     }
@@ -223,15 +241,20 @@ public class Parser {
     }
 
     private void parseExpression_() {
-        // TODO: check for errors in expression
         if (check(OP_LBRACE)) {
             dump("expression_ -> { WHERE definitions }");
             // skip {
             skip();
             // skip where
+            if (!check(KW_WHERE)) {
+                errorExpected("where");
+            }
             skip();
             parseDefinitions();
             // skip }
+            if (!check(OP_RBRACE)) {
+                errorExpected("}");
+            }
             skip();
         } else {
             dump("expression_ -> .");
@@ -393,14 +416,16 @@ public class Parser {
 
     private void parsePostfixExpression_() {
         if (check(OP_LBRACKET)) {
-            // TODO: check for error
-            dump("postfix_expression -> [ expression ] postfix_expression");
+            dump("postfix_expression -> [ expression ] postfix_expression_");
             // skip [
             skip();
             parseExpression();
             // skip ]
+            if (!check(OP_RBRACKET)) {
+                errorExpected("]");
+            }
             skip();
-            parsePostfixExpression();
+            parsePostfixExpression_();
         } else {
             dump("postfix_expression_ -> .");
         }
@@ -420,84 +445,149 @@ public class Parser {
             // skip str_constant
             skip();
         } else if (check(IDENTIFIER)) {
+            dump("atom_expression -> identifier atom_expression_");
             // skip identifier
             skip();
-            if (check(OP_LBRACE)) {
-                // TODO: check for wrong atom expression
-                dump("atom_expression -> identifier { expression }");
-                // skip {
-                skip();
-                parseExpression();
-                // skip }
-                skip();
-            } else {
-                dump("atom_expression -> identifier");
-            }
+            parseAtomExpression_();
         } else if (check(OP_LBRACE)) {
+            dump("atom_expression -> { atom_expression__");
             // skip {
             skip();
-            if (check(KW_IF)) {
-                // skip if
-                skip();
-                parseExpression();
-                //skip then
-                skip();
-                parseExpression();
-                if (check(KW_ELSE)) {
-                    dump("atom_expression -> { if expression then expression else expression }");
-                    // skip else
-                    skip();
-                    parseExpression();
-                    // skip }
-                    skip();
-                } else {
-                    dump("atom_expression -> { if expression then expression }");
-                    // skip }
-                    skip();
-                }
-            } else if (check(KW_WHILE)) {
-                dump("atom_expression -> { while expression : expression }");
-                // skip while
-                skip();
-                parseExpression();
-                // skip :
-                skip();
-                parseExpression();
-                // skip }
-                skip();
-            } else if (check(KW_FOR)) {
-                dump("atom_expression -> { for identifier = expression , expression , expression : expression }");
-                // skip for
-                skip();
-                // skip identifier
-                skip();
-                // skip =
-                skip();
-                parseExpression();
-                // skip ,
-                skip();
-                parseExpression();
-                // skip ,
-                skip();
-                parseExpression();
-                // skip :
-                skip();
-                parseExpression();
-                // skip }
-                skip();
-
-            } else {
-                dump("");
-            }
+            parseAtomExpression__();
         } else if (check(OP_LPARENT)) {
-            // TODO: check for errors
             dump("atom_expression -> ( expressions )");
             // skip (
             skip();
             parseExpressions();
-            //skip )
+            // skip )
+            if (!check(OP_RPARENT)) {
+                errorExpected(")");
+            }
+            skip();
+        } else {
+            errorExpected("logical constant, integer constant, string constant, { or (");
+        }
+    }
+
+    private void parseAtomExpression_() {
+        if (check(OP_LPARENT)) {
+            dump("atom_expression_ -> ( expressions )");
+            // skip (
+            skip();
+            parseExpressions();
+            // skip )
+            if (!check(OP_RPARENT)) {
+                errorExpected(")");
+            }
+            skip();
+        } else {
+            dump("atom_expression_ -> .");
+        }
+    }
+
+    private void parseAtomExpression__() {
+        if (check(KW_WHILE)) {
+            dump("atom_expression__ -> while expression : expression }");
+            // skip while
+            skip();
+            parseExpression();
+            // skip :
+            if (!check(OP_COLON)) {
+                errorExpected(":");
+            }
+            skip();
+            parseExpression();
+            // skip }
+            if (!check(OP_RBRACE)) {
+                errorExpected("}");
+            }
+            skip();
+        } else if (check(KW_FOR)) {
+            dump("atom_expression__ -> for identifier = expression , expression , expression : expression }");
+            // skip for
+            skip();
+            // skip identifier
+            if (!check(IDENTIFIER)) {
+                errorExpected("identifier");
+            }
+            skip();
+            // skip =
+            if (!check(OP_ASSIGN)) {
+                errorExpected("=");
+            }
+            skip();
+            parseExpression();
+            // skip ,
+            if (!check(OP_COMMA)) {
+                errorExpected(",");
+            }
+            skip();
+            parseExpression();
+            // skip ,
+            if (!check(OP_COMMA)) {
+                errorExpected(",");
+            }
+            skip();
+            parseExpression();
+            // skip :
+            if (!check(OP_COLON)) {
+                errorExpected(":");
+            }
+            skip();
+            parseExpression();
+            // skip }
+            if (!check(OP_RBRACE)) {
+                errorExpected("}");
+            }
+            skip();
+        } else if (check(KW_IF)) {
+            dump("atom_expression__ -> if expression then expression atom_expression___");
+            // skip if
+            skip();
+            parseExpression();
+            // skip then
+            if (!check(KW_THEN)) {
+                errorExpected("then");
+            }
+            skip();
+            parseExpression();
+            parseAtomExpression___();
+        } else {
+            dump("atom_expression__ -> expression = expression }");
+            parseExpression();
+            // skip =
+            if (!check(OP_ASSIGN)) {
+                errorExpected("=");
+            }
+            skip();
+            parseExpression();
+            // skip }
+            if (!check(OP_RBRACE)) {
+                errorExpected("}");
+            }
             skip();
         }
+    }
+
+    private void parseAtomExpression___() {
+        if (check(OP_RBRACE)) {
+            dump("atom_expression___ -> }");
+            // skip }
+            skip();
+        } else if (check(KW_ELSE)) {
+            dump("atom_expression___ -> else expression }");
+            // skip else
+            skip();
+            parseExpression();
+            // skip }
+            if (!check(OP_RBRACE)) {
+                errorExpected("}");
+            }
+            skip();
+        } else {
+            errorExpected("} or else");
+        }
+
     }
 
     private void parseExpressions() {
@@ -518,12 +608,18 @@ public class Parser {
     }
 
     private void parseVarDef() {
-        // TODO: check for errors in var def
+        dump("variable_definition -> var identifier : type");
         // skip var
         skip();
         // skip identifier
+        if (!check(IDENTIFIER)) {
+            errorExpected("identifier");
+        }
         skip();
         // skip :
+        if (!check(OP_COLON)) {
+            errorExpected(":");
+        }
         skip();
         parseType();
     }
