@@ -16,6 +16,7 @@ import common.Report;
 import compiler.lexer.Position;
 import compiler.lexer.Symbol;
 import compiler.lexer.TokenType;
+import compiler.parser.ast.Ast;;
 
 public class Parser {
     /**
