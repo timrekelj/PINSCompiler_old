@@ -21,7 +21,7 @@ function_definition -> 'fun' 'identifier' '(' parameters ')' ':' type '=' expres
 
 parameters -> parameter parameters_ .
 
-parameters_ -> ',' parameter parameters_ . -------------
+parameters_ -> ',' parameter parameters_ . 
 parameters_ -> .
 
 parameter -> 'identifier' ':' type .
@@ -33,12 +33,12 @@ expression_ -> .
 
 logical_ior_expression -> logical_and_expression logical_ior_expression_ .
 
-logical_ior_expression_ -> '|' logical_and_expression logical_ior_expression_ . ---------------
+logical_ior_expression_ -> '|' logical_and_expression logical_ior_expression_ .
 logical_ior_expression_ -> .
 
 logical_and_expression -> compare_expression logical_and_expression_ .
 
-logical_and_expression_ -> '&' compare_expression logical_and_expression_ . ----------
+logical_and_expression_ -> '&' compare_expression logical_and_expression_ . 
 logical_and_expression_ -> .
 
 compare_expression -> additive_expression compare_expression_ .
@@ -53,15 +53,15 @@ compare_expression_ -> .
 
 additive_expression -> multiplicative_expression additive_expression_ .
 
-additive_expression_ -> '+' multiplicative_expression additive_expression_ .  ----------
-additive_expression_ -> '-' multiplicative_expression additive_expression_ .  ----------
+additive_expression_ -> '+' multiplicative_expression additive_expression_ .
+additive_expression_ -> '-' multiplicative_expression additive_expression_ . 
 additive_expression_ -> .
 
 multiplicative_expression -> prefix_expression multiplicative_expression_ .
 
-multiplicative_expression_ -> '*' prefix_expression multiplicative_expression_ . --------------
-multiplicative_expression_ -> '/' prefix_expression multiplicative_expression_ . --------------
-multiplicative_expression_ -> '%' prefix_expression multiplicative_expression_ . --------------
+multiplicative_expression_ -> '*' prefix_expression multiplicative_expression_ . 
+multiplicative_expression_ -> '/' prefix_expression multiplicative_expression_ . 
+multiplicative_expression_ -> '%' prefix_expression multiplicative_expression_ . 
 multiplicative_expression_ -> .
 
 prefix_expression -> '+' prefix_expression .

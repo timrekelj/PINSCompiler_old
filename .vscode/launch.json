@@ -6,13 +6,6 @@
     "configurations": [
         {
             "type": "java",
-            "name": "Tests",
-            "request": "launch",
-            "mainClass": "tests.Test",
-            "args": "TEST --folder ${input:dump}"
-        },
-        {
-            "type": "java",
             "name": "Launch specific phase",
             "request": "launch",
             "mainClass": "Main",
