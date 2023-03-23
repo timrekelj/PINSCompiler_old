@@ -9,19 +9,14 @@ import static compiler.lexer.TokenType.*;
 import static common.RequireNonNull.requireNonNull;
 
 import java.io.PrintStream;
-import java.lang.management.OperatingSystemMXBean;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
-import javax.crypto.spec.DESKeySpec;
-import javax.swing.text.html.HTMLDocument.HTMLReader.ParagraphAction;
 
 import common.Report;
 import compiler.lexer.Position;
 import compiler.lexer.Symbol;
 import compiler.lexer.TokenType;
-import compiler.lexer.Position.Location;
 import compiler.parser.ast.*;
 import compiler.parser.ast.def.*;
 import compiler.parser.ast.type.*;
@@ -264,8 +259,7 @@ public class Parser {
 
     private Expr parseExpression() {
         dump("expression -> logical_ior_expression expression_");
-        var expr = parseLogicalIorExpression();
-        return parseExpression_(expr);
+        return parseExpression_(parseLogicalIorExpression());
     }
 
     private Expr parseExpression_(Expr expr) {
@@ -292,160 +286,143 @@ public class Parser {
 
     private Expr parseLogicalIorExpression() {
         dump("logical_ior_expression -> logical_and_expression logical_ior_expression_");
-        var expr = parseLogicalAndExpression();
-        return parseLogicalIorExpression_(expr);
+        return parseLogicalIorExpression_(parseLogicalAndExpression());
     }
 
-    private Expr parseLogicalIorExpression_(Expr expr){
+    private Expr parseLogicalIorExpression_(Expr left){
         if (check(OP_OR)) {
             dump("logical_ior_expression_ -> | logical_ior_expression");
             // skip |
             skip();
-            var ior = parseLogicalAndExpression();
-            var bin = new Binary(new Position(expr.position.start, ior.position.end), expr, Binary.Operator.OR, ior);
-            return parseLogicalIorExpression_(bin);
+            var right = parseLogicalAndExpression();
+            return parseLogicalIorExpression_(new Binary(new Position(left.position.start, right.position.end), left, Binary.Operator.OR, right));
         } else {
             dump("logical_ior_expression_ -> .");
-            return expr;
+            return left;
         }
     }
 
     private Expr parseLogicalAndExpression() {
         dump("logical_and_expression -> compare_expression logical_and_expression_");
-        var expr = parseCompareExpression();
-        return parseLogicalAndExpression_(expr);
+        return parseLogicalAndExpression_(parseCompareExpression());
     }
 
-    private Expr parseLogicalAndExpression_(Expr expr) {
+    private Expr parseLogicalAndExpression_(Expr left) {
         if (check(OP_AND)) {
             dump("logical_and_expression_ -> & logical_and_expression");
             // skip &
             skip();
-            var and = parseCompareExpression();
-            var bin = new Binary(new Position(expr.position.start, and.position.end), expr, Binary.Operator.AND, and);
-            return parseLogicalAndExpression_(bin);
+            var right = parseCompareExpression();
+            return parseLogicalAndExpression_(new Binary(new Position(left.position.start, right.position.end), left, Binary.Operator.AND, right));
         } else {
             dump("logical_and_expression_ -> .");
-            return expr;
+            return left;
         }
     }
 
     private Expr parseCompareExpression() {
         dump("compare_expression -> additive_expression compare_expression_");
-        var expr = parseAdditiveExpression();
-        var comp = parseCompareExpression_(expr);
+        var left = parseAdditiveExpression();
+        var right = parseCompareExpression_(left);
         if (check(OP_EQ) || check(OP_NEQ) || check(OP_GEQ) || check(OP_LEQ) || check(OP_LT) || check(OP_GT))
             errorExpected("end of something");
-        return comp;
+        return right;
     }
 
-    private Expr parseCompareExpression_(Expr expr) {
+    private Expr parseCompareExpression_(Expr left) {
         if (check(OP_EQ)) {
             dump("compare_expression_ -> == additive_expression");
             // skip ==
             skip();
-            var e = parseAdditiveExpression();
-            var bin = new Binary(new Position(expr.position.start, e.position.end), expr, Binary.Operator.EQ, e);
-            return bin;
+            var right = parseAdditiveExpression();
+            return new Binary(new Position(left.position.start, right.position.end), left, Binary.Operator.EQ, right);
         } else if (check(OP_NEQ)) {
             dump("compare_expression_ -> != additive_expression");
             // skip !=
             skip();
-            var e = parseAdditiveExpression();
-            var bin = new Binary(new Position(expr.position.start, e.position.end), expr, Binary.Operator.NEQ, e);
-            return bin;
+            var right = parseAdditiveExpression();
+            return new Binary(new Position(left.position.start, right.position.end), left, Binary.Operator.NEQ, right);
         } else if (check(OP_LEQ)) {
             dump("compare_expression_ -> <= additive_expression");
             // skip <=
             skip();
-            var e = parseAdditiveExpression();
-            var bin = new Binary(new Position(expr.position.start, e.position.end), expr, Binary.Operator.LEQ, e);
-            return bin;
+            var right = parseAdditiveExpression();
+            return new Binary(new Position(left.position.start, right.position.end), left, Binary.Operator.LEQ, right);
         } else if (check(OP_GEQ)) {
             dump("compare_expression_ -> >= additive_expression");
             // skip >=
             skip();
-            var e = parseAdditiveExpression();
-            var bin = new Binary(new Position(expr.position.start, e.position.end), expr, Binary.Operator.GEQ, e);
-            return bin;
+            var right = parseAdditiveExpression();
+            return new Binary(new Position(left.position.start, right.position.end), left, Binary.Operator.GEQ, right);
         } else if (check(OP_LT)) {
             dump("compare_expression_ -> < additive_expression");
             // skip <
             skip();
-            var e = parseAdditiveExpression();
-            var bin = new Binary(new Position(expr.position.start, e.position.end), expr, Binary.Operator.LT, e);
-            return bin;
+            var right = parseAdditiveExpression();
+            return new Binary(new Position(left.position.start, right.position.end), left, Binary.Operator.LT, right);
         } else if (check(OP_GT)) {
             dump("compare_expression_ -> > additive_expression");
             // skip >
             skip();
-            var e = parseAdditiveExpression();
-            var bin = new Binary(new Position(expr.position.start, e.position.end), expr, Binary.Operator.GT, e);
-            return bin;
+            var right = parseAdditiveExpression();
+            return new Binary(new Position(left.position.start, right.position.end), left, Binary.Operator.GT, right);
         } else {
             dump("compare_expression_ -> .");
-            return expr;
+            return left;
         }
     }
 
     private Expr parseAdditiveExpression() {
         dump("additive_expression -> multiplicative_expression additive_expression_");
-        var expr = parseMultiplicativeExpression();
-        return parseAdditiveExpression_(expr);
+        return parseAdditiveExpression_(parseMultiplicativeExpression());
     }
 
-    private Expr parseAdditiveExpression_(Expr expr) {
+    private Expr parseAdditiveExpression_(Expr left) {
         if (check(OP_ADD)) {
             dump("additive_expression_ -> + additive_expression");
             // skip +
             skip();
-            var add = parseMultiplicativeExpression();
-            var bin = new Binary(new Position(expr.position.start, add.position.end), expr, Binary.Operator.ADD, add);
-            return parseAdditiveExpression_(bin);
+            var right = parseMultiplicativeExpression();
+            return parseAdditiveExpression_(new Binary(new Position(left.position.start, right.position.end), left, Binary.Operator.ADD, right));
         } else if (check(OP_SUB)) {
             dump("additive_expression_ -> - additive_expression");
             // skip -
             skip();
-            var sub = parseMultiplicativeExpression();
-            var bin = new Binary(new Position(expr.position.start, sub.position.end), expr, Binary.Operator.SUB, sub);
-            return parseAdditiveExpression_(bin);
+            var right = parseMultiplicativeExpression();
+            return parseAdditiveExpression_(new Binary(new Position(left.position.start, right.position.end), left, Binary.Operator.SUB, right));
         } else {
             dump("additive_expression_ -> .");
-            return expr;
+            return left;
         }
     }
 
     private Expr parseMultiplicativeExpression() {
         dump("multiplicative_expression -> prefix_expression multiplicative_expression_");
-        var expr = parsePrefixExpression();
-        return parseMultiplicativeExpression_(expr);
+        return parseMultiplicativeExpression_(parsePrefixExpression());
     }
 
-    private Expr parseMultiplicativeExpression_(Expr expr) {
+    private Expr parseMultiplicativeExpression_(Expr left) {
         if (check(OP_MUL)) {
             dump("multiplicative_expression_ -> * multiplicative_expression");
             // skip *
             skip();
-            var mul = parsePrefixExpression();
-            var bin = new Binary(new Position(expr.position.start, mul.position.end), expr, Binary.Operator.MUL, mul);
-            return parseMultiplicativeExpression_(bin);
+            var right = parsePrefixExpression();
+            return parseMultiplicativeExpression_(new Binary(new Position(left.position.start, right.position.end), left, Binary.Operator.MUL, right));
         } else if (check(OP_DIV)) {
             dump("multiplicative_expression_ -> / multiplicative_expression");
             // skip /
             skip();
-            var div = parsePrefixExpression();
-            var bin = new Binary(new Position(expr.position.start, div.position.end), expr, Binary.Operator.DIV, div);
-            return parseMultiplicativeExpression_(bin);
+            var right = parsePrefixExpression();
+            return parseMultiplicativeExpression_(new Binary(new Position(left.position.start, right.position.end), left, Binary.Operator.DIV, right));
         } else if (check(OP_MOD)) {
             dump("multiplicative_expression_ -> % multiplicative_expression");
             // skip %
             skip();
-            var mod = parsePrefixExpression();
-            var bin = new Binary(new Position(expr.position.start, mod.position.end), expr, Binary.Operator.MOD, mod);
-            return parseMultiplicativeExpression_(bin);
+            var right = parsePrefixExpression();
+            return parseMultiplicativeExpression_(new Binary(new Position(left.position.start, right.position.end), left, Binary.Operator.MOD, right));
         } else {
             dump("multiplicative_expression_ -> .");
-            return expr; 
+            return left; 
         }
     }
 
@@ -453,21 +430,21 @@ public class Parser {
         if (check(OP_ADD)) {
             dump("prefix_expression -> + prefix_expression");
             // skip +
-            var start = skip();
-            var prefix = parsePrefixExpression();
-            return new Unary(new Position(start.position.start, prefix.position.end), prefix, Unary.Operator.ADD);
+            var start = skip().position.start;
+            var right = parsePrefixExpression();
+            return new Unary(new Position(start, right.position.end), right, Unary.Operator.ADD);
         } else if (check(OP_SUB)) {
             dump("prefix_expression -> - prefix_expression");
             // skip -
-            var start = skip();
-            var prefix = parsePrefixExpression();
-            return new Unary(new Position(start.position.start, prefix.position.end), prefix, Unary.Operator.SUB);
+            var start = skip().position.start;
+            var right = parsePrefixExpression();
+            return new Unary(new Position(start, right.position.end), right, Unary.Operator.SUB);
         } else if (check(OP_NOT)) {
             dump("prefix_expression -> ! prefix_expression");
             // skip !
-            var start = skip();
-            var prefix = parsePrefixExpression();
-            return new Unary(new Position(start.position.start, prefix.position.end), prefix, Unary.Operator.NOT);
+            var start = skip().position.start;
+            var right = parsePrefixExpression();
+            return new Unary(new Position(start, right.position.end), right, Unary.Operator.NOT);
         } else {
             dump("prefix_expression -> postfix_expression");
             return parsePostfixExpression();
@@ -476,8 +453,7 @@ public class Parser {
 
     private Expr parsePostfixExpression() {
         dump("postfix_expression -> atom_expression postfix_expression_");
-        var left = parseAtomExpression();
-        return parsePostfixExpression_(left);
+        return parsePostfixExpression_(parseAtomExpression());
     }
 
     private Expr parsePostfixExpression_(Expr left) {
@@ -490,8 +466,7 @@ public class Parser {
             if (!check(OP_RBRACKET)) {
                 errorExpected("]");
             }
-            var end = skip().position.end;
-            return parsePostfixExpression_(new Binary(new Position(left.position.start, end), left, Operator.ARR, right));
+            return parsePostfixExpression_(new Binary(new Position(left.position.start, skip().position.end), left, Operator.ARR, right));
         } else {
             dump("postfix_expression_ -> .");
             return left;
@@ -533,8 +508,7 @@ public class Parser {
             if (!check(OP_RPARENT)) {
                 errorExpected(")");
             }
-            var end = skip().position.end;
-            return new Block(new Position(start, end), expr.expressions);
+            return new Block(new Position(start, skip().position.end), expr.expressions);
         } else {
             errorExpected("logical constant, integer constant, string constant, { or (");
             return null;
@@ -546,7 +520,6 @@ public class Parser {
             dump("atom_expression_ -> ( expressions )");
             // skip (
             var start = skip().position.start;
-            // TODO: maybe remove Block because you only use .expressions
             var exprs = parseExpressions(new Block(null, new ArrayList<Expr>()));
             // skip )
             if (!check(OP_RPARENT)) {
@@ -578,8 +551,7 @@ public class Parser {
             if (!check(OP_RBRACE)) {
                 errorExpected("}");
             }
-            var end = skip().position.end;
-            return new While(new Position(start, end), condition, body);
+            return new While(new Position(start, skip().position.end), condition, body);
         } else if (check(KW_FOR)) {
             dump("atom_expression__ -> for identifier = expression , expression , expression : expression }");
             // skip for
@@ -617,8 +589,7 @@ public class Parser {
             if (!check(OP_RBRACE)) {
                 errorExpected("}");
             }
-            var end = skip().position.end;
-            return new For(new Position(start, end), new Name(counter.position, counter.lexeme), low, high, step, body);
+            return new For(new Position(start, skip().position.end), new Name(counter.position, counter.lexeme), low, high, step, body);
         } else if (check(KW_IF)) {
             dump("atom_expression__ -> if expression then expression atom_expression___");
             // skip if
@@ -644,8 +615,7 @@ public class Parser {
             if (!check(OP_RBRACE)) {
                 errorExpected("}");
             }
-            var end = skip().position.end;
-            return new Binary(new Position(start, end), left, Operator.ASSIGN, right);
+            return new Binary(new Position(start, skip().position.end), left, Operator.ASSIGN, right);
         }
     }
 
@@ -703,7 +673,6 @@ public class Parser {
             errorExpected(":");
         }
         skip();
-
         // parse type
         var type = parseType();
         return new VarDef(new Position(start, type.position.end), name, type);
