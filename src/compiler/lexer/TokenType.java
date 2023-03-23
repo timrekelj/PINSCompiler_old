@@ -37,7 +37,7 @@ public enum TokenType {
      */
     C_LOGICAL, // logična konstanta (true/false)
     C_INTEGER, // celoštevilska konstanta
-    C_STRING,  //* znakovna konstanta
+    C_STRING,  // znakovna konstanta
 
     /**
      * Ime.
