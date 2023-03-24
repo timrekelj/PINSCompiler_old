@@ -100,10 +100,12 @@ public class Parser {
             // skip ';'
             skip();
             return parseDefinitions(defs);
-        } else {
-            dump("definitions_ -> .");
+        } else if(check(EOF) || check(OP_RBRACE)) {
+            dump( "definitions_ -> .");
+            return defs;
         }
-        return defs;
+        errorExpected("}, ; or EOF");;
+        return null;
     }
 
     private Def parseDefinition() {
