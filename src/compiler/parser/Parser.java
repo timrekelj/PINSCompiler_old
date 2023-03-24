@@ -64,7 +64,7 @@ public class Parser {
     }
 
     private void errorExpected(String expected) {
-        if (symbols.get(0).lexeme == "$") {
+        if (symbols.get(0).lexeme.equals("$")) {
             Report.error(symbols.get(index).position, "expected " + expected + ", got EOF");
         }
         Report.error(symbols.get(index).position, "expected " + expected + ", got " + symbols.get(index).lexeme);
@@ -79,7 +79,7 @@ public class Parser {
 
     private Ast parseSource() {
         dump("source -> definitions");
-        return parseDefinitions(new Defs(symbols.get(index).position, new ArrayList<Def>()));
+        return parseDefinitions(new Defs(symbols.get(index).position, new ArrayList<>()));
     }
 
     /**
@@ -104,7 +104,7 @@ public class Parser {
             dump( "definitions_ -> .");
             return defs;
         }
-        errorExpected("}, ; or EOF");;
+        errorExpected("}, ; or EOF");
         return null;
     }
 
@@ -203,7 +203,7 @@ public class Parser {
             errorExpected("(");
         }
         skip();
-        var params = parseParameters(new ArrayList<Parameter>());
+        var params = parseParameters(new ArrayList<>());
         // skip )
         if (!check(OP_RPARENT)) {
             errorExpected(")");
@@ -274,7 +274,7 @@ public class Parser {
                 errorExpected("where");
             }
             skip();
-            var defs = parseDefinitions(new Defs(symbols.get(index).position, new ArrayList<Def>()));
+            var defs = parseDefinitions(new Defs(symbols.get(index).position, new ArrayList<>()));
             // skip }
             if (!check(OP_RBRACE)) {
                 errorExpected("}");
@@ -505,7 +505,7 @@ public class Parser {
             dump("atom_expression -> ( expressions )");
             // skip (
             var start = skip().position.start;
-            var expr = parseExpressions(new Block(null, new ArrayList<Expr>()));
+            var expr = parseExpressions(new Block(null, new ArrayList<>()));
             // skip )
             if (!check(OP_RPARENT)) {
                 errorExpected(")");
@@ -522,7 +522,7 @@ public class Parser {
             dump("atom_expression_ -> ( expressions )");
             // skip (
             var start = skip().position.start;
-            var exprs = parseExpressions(new Block(null, new ArrayList<Expr>()));
+            var exprs = parseExpressions(new Block(null, new ArrayList<>()));
             // skip )
             if (!check(OP_RPARENT)) {
                 errorExpected(")");
