@@ -1,1 +1,3 @@
+var x: integer;
+typ MyInt: integer;
 fun f(_: integer): integer = identifier ( 10, 20, 30 )
