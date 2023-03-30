@@ -44,109 +44,128 @@ public class NameChecker implements Visitor {
 
     @Override
     public void visit(Call call) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'visit'");
+        if (symbolTable.definitionFor(call.name).isPresent()) {
+            if (!symbolTable.definitionFor(call.name).get().getClass().getSimpleName().equals("FunDef"))
+                Report.error(call.position, call.name + " is not defined as function");
+            definitions.store(symbolTable.definitionFor(call.name).get(), call);
+        } else Report.error(call.position, "The function " + call.name + " is not declared.");
     }
 
     @Override
     public void visit(Binary binary) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'visit'");
+        binary.left.accept(this);
+        binary.right.accept(this);
     }
 
     @Override
     public void visit(Block block) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'visit'");
+        for (Expr expr : block.expressions)
+            expr.accept(this);
     }
 
     @Override
     public void visit(For forLoop) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'visit'");
+        visit(forLoop.counter);
+        forLoop.low.accept(this);
+        forLoop.high.accept(this);
+        forLoop.step.accept(this);
+        forLoop.body.accept(this);
     }
 
     @Override
     public void visit(Name name) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'visit'");
+            if (symbolTable.definitionFor(name.name).isPresent()) {
+                if (!symbolTable.definitionFor(name.name).get().getClass().getSimpleName().equals("VarDef") &&
+                    !symbolTable.definitionFor(name.name).get().getClass().getSimpleName().equals("Parameter"))
+                    Report.error(name.position, name.name + " is not defined as variable or parameter");
+                definitions.store(symbolTable.definitionFor(name.name).get(), name);
+            } else Report.error(name.position, "The variable " + name.name + " is not declared.");
     }
 
     @Override
     public void visit(IfThenElse ifThenElse) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'visit'");
+        ifThenElse.condition.accept(this);
+        ifThenElse.thenExpression.accept(this);
     }
 
     @Override
-    public void visit(Literal literal) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'visit'");
-    }
+    public void visit(Literal literal) { /* Do nothing. */ }
 
     @Override
-    public void visit(Unary unary) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'visit'");
-    }
+    public void visit(Unary unary) { unary.expr.accept(this); }
 
     @Override
     public void visit(While whileLoop) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'visit'");
+        whileLoop.condition.accept(this);
+        whileLoop.body.accept(this);
     }
 
     @Override
     public void visit(Where where) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'visit'");
+        symbolTable.inNewScope(() -> {
+            visit(where.defs);
+            where.expr.accept(this);
+        });
     }
 
     @Override
     public void visit(Defs defs) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'visit'");
+        for (Def def : defs.definitions) {
+            try {
+                symbolTable.insert(def);
+            } catch (DefinitionAlreadyExistsException e) {
+                Report.error("Definition already exists");
+            }
+        }
+
+        for (Def def : defs.definitions) {
+            switch (def.getClass().getSimpleName()) {
+                case "FunDef" -> visit((FunDef) def);
+                case "TypeDef" -> visit((TypeDef) def);
+                case "VarDef" -> visit((VarDef) def);
+            }
+        }
     }
 
     @Override
     public void visit(FunDef funDef) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'visit'");
+        symbolTable.inNewScope(() -> {
+            for (Parameter parameter : funDef.parameters)
+                parameter.type.accept(this);
+            for (Parameter parameter : funDef.parameters)
+                parameter.accept(this);
+            funDef.type.accept(this);
+            funDef.body.accept(this);
+        });
     }
 
     @Override
-    public void visit(TypeDef typeDef) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'visit'");
-    }
+    public void visit(TypeDef typeDef) { typeDef.type.accept(this); }
 
     @Override
-    public void visit(VarDef varDef) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'visit'");
-    }
+    public void visit(VarDef varDef) { varDef.type.accept(this); }
 
     @Override
     public void visit(Parameter parameter) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'visit'");
+        try {
+            symbolTable.insert(parameter);
+        } catch (Exception e) {
+            Report.error(parameter.position, "Parameter already exists");
+        } 
     }
 
     @Override
-    public void visit(Array array) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'visit'");
-    }
+    public void visit(Array array) { array.type.accept(this); }
 
     @Override
-    public void visit(Atom atom) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'visit'");
-    }
+    public void visit(Atom atom) { /* Do nothing. */ }
 
     @Override
     public void visit(TypeName name) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'visit'");
+        if (symbolTable.definitionFor(name.identifier).isPresent()) {
+            if (!symbolTable.definitionFor(name.identifier).get().getClass().getSimpleName().equals("TypeDef"))
+                Report.error(name.position, name.identifier + " is not defined as type");
+            definitions.store(symbolTable.definitionFor(name.identifier).get(), name);
+        } else Report.error(name.position, "The type " + name.identifier + " is not declared.");
     }
 }
