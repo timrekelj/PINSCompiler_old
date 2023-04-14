@@ -42,16 +42,21 @@ public class TypeChecker implements Visitor {
 
     @Override
     public void visit(Call call) {
+        if (call.arguments.size() != ((FunDef) definitions.valueFor(call).get()).parameters.size()) {
+            Report.error(call.position, "Number of arguments is not the same as the number of parameters.");
+        }
+
+        // check called function if it is not already checked
+        if (!types.valueFor(definitions.valueFor(call).get()).isPresent())
+            definitions.valueFor(call).get().accept(this);
+
         for (int i = 0; i < call.arguments.size(); i++) {
             call.arguments.get(i).accept(this);
-            definitions.valueFor(call.arguments.get(i)).get().accept(this);
-            if (types.valueFor(call.arguments.get(i)).equals(types.valueFor(definitions.valueFor(call.arguments.get(i)).get())))
+            if (!types.valueFor(call.arguments.get(i)).get().equals(((Type.Function) types.valueFor(definitions.valueFor(call).get()).get()).parameters.get(i)))
                 Report.error(call.arguments.get(i).position, i + ". argument is not of the same type as the function parameter.");
         }
-        if (!definitions.valueFor(call).isPresent())
-            definitions.valueFor(call).get().accept(this);
-        types.store(types.valueFor(definitions.valueFor(call).get()).get(), call);
-        
+
+        types.store(types.valueFor(((FunDef)definitions.valueFor(call).get()).type).get(), call);
     }
 
     @Override
@@ -68,7 +73,7 @@ public class TypeChecker implements Visitor {
                 break;
             case AND, OR:
                 if (types.valueFor(binary.left).get().equals(new Type.Atom(Kind.LOG)) &&
-                    types.valueFor(binary.left).get().equals(new Type.Atom(Kind.LOG)))
+                    types.valueFor(binary.right).get().equals(new Type.Atom(Kind.LOG)))
                     types.store(new Type.Atom(Kind.LOG) , binary);
                 else Report.error(binary.position, "Logical operator used on non-logical types.");
                 break;
@@ -85,9 +90,10 @@ public class TypeChecker implements Visitor {
                 else Report.error(binary.position, "Assignment of different types.");
                 break;
             case ARR:
-                if (types.valueFor(binary.right).get().equals(new Type.Atom(Kind.INT)))
-                    types.store(types.valueFor(definitions.valueFor(binary).get()).get(), binary);
-                else Report.error(binary.position, "Array index is not integer.");
+                if (types.valueFor(binary.right).get().equals(new Type.Atom(Kind.INT)) &&
+                    types.valueFor(binary.left).get().isArray())
+                    types.store(types.valueFor(binary.left).get().asArray().get().type, binary);
+                else Report.error(binary.position, "Array is not called right.");
                 break;
             default:
                 Report.error("u dumb.");
@@ -136,7 +142,7 @@ public class TypeChecker implements Visitor {
         if (!types.valueFor(ifThenElse.condition).get().equals(new Type.Atom(Kind.LOG)))
             Report.error(ifThenElse.position, "Condition is not logical.");
         ifThenElse.thenExpression.accept(this);
-        if (definitions.valueFor(ifThenElse.thenExpression).isPresent())
+        if (ifThenElse.elseExpression.isPresent())
             ifThenElse.elseExpression.get().accept(this);
         types.store(new Type.Atom(Kind.VOID), ifThenElse);
     }
@@ -164,7 +170,7 @@ public class TypeChecker implements Visitor {
     @Override
     public void visit(While whileLoop) {
         whileLoop.condition.accept(this);
-        if (types.valueFor(whileLoop.condition).get().equals(new Type.Atom(Kind.LOG)))
+        if (!types.valueFor(whileLoop.condition).get().equals(new Type.Atom(Kind.LOG)))
             Report.error(whileLoop.position, "Condition is not logical.");
         types.store(new Type.Atom(Kind.VOID), whileLoop);
         whileLoop.body.accept(this);
