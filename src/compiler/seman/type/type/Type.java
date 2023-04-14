@@ -133,7 +133,8 @@ public abstract class Type {
 
         @Override
         public boolean equals(Type t) {
-            throw new RuntimeException("Implementiraj ...");
+            return t.isAtom() && t.asAtom().isPresent() &&
+                    t.asAtom().get().kind == this.kind;
         }
 
         @Override
@@ -193,7 +194,9 @@ public abstract class Type {
 
         @Override
         public boolean equals(Type t) {
-            throw new RuntimeException("Implementiraj ...");
+            return t.isArray() && t.asArray().isPresent() &&
+                    t.asArray().get().size == this.size &&
+                    t.asArray().get().type == this.type;
         }
 
         @Override
@@ -235,7 +238,11 @@ public abstract class Type {
 
         @Override
         public boolean equals(Type t) {
-            throw new RuntimeException("Implementiraj ...");
+            if (!t.isFunction() && t.asFunction().isPresent()) return false;
+            if (t.asFunction().get().returnType != this.returnType) return false;
+            for (int i = 0; i < this.parameters.size(); i++)
+                if (t.asFunction().get().parameters.equals(this.parameters.get(i))) return false;
+            return true;
         }
 
         @Override

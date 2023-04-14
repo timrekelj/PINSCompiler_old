@@ -1,2 +1,1 @@
-var a: integer;
-fun f(x:integer) : integer = a + x
+fun f(x: integer, y: logical): logical = !y

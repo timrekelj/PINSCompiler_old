@@ -18,6 +18,13 @@
             "mainClass": "Main",
             "args": "PINS quickTest.pins23"
         }
+        // {
+        //     "type": "java",
+        //     "name": "Launch tests",
+        //     "request": "launch",
+        //     "mainClass": "App",
+        //     "args": "test ..\\..\\..\\PINSCompiler ..\\tests\\5-typ.tst"
+        // }
     ],
     "inputs": [
         {

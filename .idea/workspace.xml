@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="4ecb02f4-92c7-4980-af64-ed4710960b4d" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/ArgPar_0_1.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/ArgPar_0_11.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.vscode/launch.json" beforeDir="false" afterPath="$PROJECT_DIR$/.vscode/launch.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TestsRunner/src/CmdExecutor/CmdExecutor.java" beforeDir="false" afterPath="$PROJECT_DIR$/TestsRunner/src/CmdExecutor/CmdExecutor.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TestsRunner/src/TestsFileParser.java" beforeDir="false" afterPath="$PROJECT_DIR$/TestsRunner/src/TestsFileParser.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/quickTest.pins23" beforeDir="false" afterPath="$PROJECT_DIR$/quickTest.pins23" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/compiler/seman/name/NameChecker.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/compiler/seman/name/NameChecker.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/compiler/seman/type/TypeChecker.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/compiler/seman/type/TypeChecker.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/compiler/seman/type/type/Type.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/compiler/seman/type/type/Type.java" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectId" id="2OJnU3UPYn2tPK9A9tNfsu3sxdD" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "git-widget-placeholder": "types",
+    "last_opened_file_path": "C:/Users/timre/Documents/FRI/prevajalniki_in_navidezni_sistemi/TestsRunner",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="RunManager">
+    <configuration name="Run TYP" type="Application" factoryName="Application">
+      <option name="ALTERNATIVE_JRE_PATH" value="corretto-19" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
+      <option name="MAIN_CLASS_NAME" value="Main" />
+      <module name="PINSCompiler" />
+      <option name="PROGRAM_PARAMETERS" value="PINS quickTest.pins23 --exec TYP --dump TYP" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="4ecb02f4-92c7-4980-af64-ed4710960b4d" name="Changes" comment="" />
+      <created>1681287570193</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1681287570193</updated>
+      <workItem from="1681287570193" duration="777000" />
+      <workItem from="1681289441968" duration="13121000" />
+      <workItem from="1681323619107" duration="45000" />
+      <workItem from="1681323700688" duration="1457000" />
+      <workItem from="1681333064404" duration="42000" />
+      <workItem from="1681377724889" duration="18000" />
+      <workItem from="1681378777243" duration="12000" />
+      <workItem from="1681415649429" duration="54000" />
+      <workItem from="1681415935392" duration="43000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>

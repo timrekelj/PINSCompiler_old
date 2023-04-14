@@ -48,6 +48,8 @@ public class NameChecker implements Visitor {
             if (!symbolTable.definitionFor(call.name).get().getClass().getSimpleName().equals("FunDef"))
                 Report.error(call.position, call.name + " is not defined as function");
             definitions.store(symbolTable.definitionFor(call.name).get(), call);
+            for (Expr expr : call.arguments)
+                expr.accept(this);
         } else Report.error(call.position, "The function " + call.name + " is not declared.");
     }
 
