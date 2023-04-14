@@ -48,6 +48,8 @@ public class NameChecker implements Visitor {
             if (!symbolTable.definitionFor(call.name).get().getClass().getSimpleName().equals("FunDef"))
                 Report.error(call.position, call.name + " is not defined as function");
             definitions.store(symbolTable.definitionFor(call.name).get(), call);
+            for (Expr expr : call.arguments)
+                expr.accept(this);
         } else Report.error(call.position, "The function " + call.name + " is not declared.");
     }
 
@@ -65,7 +67,7 @@ public class NameChecker implements Visitor {
 
     @Override
     public void visit(For forLoop) {
-        visit(forLoop.counter);
+        forLoop.counter.accept(this);
         forLoop.low.accept(this);
         forLoop.high.accept(this);
         forLoop.step.accept(this);
@@ -86,6 +88,9 @@ public class NameChecker implements Visitor {
     public void visit(IfThenElse ifThenElse) {
         ifThenElse.condition.accept(this);
         ifThenElse.thenExpression.accept(this);
+        
+        if (ifThenElse.elseExpression.isPresent())
+            ifThenElse.elseExpression.get().accept(this);
     }
 
     @Override
@@ -103,7 +108,7 @@ public class NameChecker implements Visitor {
     @Override
     public void visit(Where where) {
         symbolTable.inNewScope(() -> {
-            visit(where.defs);
+            where.defs.accept(this);
             where.expr.accept(this);
         });
     }
@@ -118,13 +123,8 @@ public class NameChecker implements Visitor {
             }
         }
 
-        for (Def def : defs.definitions) {
-            switch (def.getClass().getSimpleName()) {
-                case "FunDef" -> visit((FunDef) def);
-                case "TypeDef" -> visit((TypeDef) def);
-                case "VarDef" -> visit((VarDef) def);
-            }
-        }
+        for (Def def : defs.definitions)
+            def.accept(this);
     }
 
     @Override
@@ -155,7 +155,9 @@ public class NameChecker implements Visitor {
     }
 
     @Override
-    public void visit(Array array) { array.type.accept(this); }
+    public void visit(Array array) {
+        array.type.accept(this);
+    }
 
     @Override
     public void visit(Atom atom) { /* Do nothing. */ }
