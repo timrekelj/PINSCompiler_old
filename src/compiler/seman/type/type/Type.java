@@ -123,7 +123,11 @@ public abstract class Type {
 
         @Override
         public int sizeInBytes() {
-            throw new RuntimeException("Implementiraj ...");
+            switch (kind) {
+                case INT, STR, LOG: return Constants.WordSize;
+                case VOID: return 0;
+                default: throw new RuntimeException("Implementiraj ...");
+            }
         }
 
         @Override
