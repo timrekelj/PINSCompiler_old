@@ -123,16 +123,12 @@ public abstract class Type {
 
         @Override
         public int sizeInBytes() {
-            switch (kind) {
-                case INT, STR, LOG: return Constants.WordSize;
-                case VOID: return 0;
-                default: throw new RuntimeException("Implementiraj ...");
-            }
+            return this.kind.size;
         }
 
         @Override
         public int sizeInBytesAsParam() {
-            throw new RuntimeException("Implementiraj ...");
+            return Constants.WordSize;
         }
 
         @Override
@@ -184,12 +180,12 @@ public abstract class Type {
 
         @Override
         public int sizeInBytes() {
-            throw new RuntimeException("Implementiraj ...");
+            return (size * type.sizeInBytes());
         }
 
         @Override
         public int sizeInBytesAsParam() {
-            throw new RuntimeException("Implementiraj ...");
+            return Constants.WordSize;
         }
 
         public int elementSizeInBytes() {
@@ -232,12 +228,12 @@ public abstract class Type {
 
         @Override
         public int sizeInBytes() {
-            throw new RuntimeException("Implementiraj ...");
+            return returnType.sizeInBytes();
         }
 
         @Override
         public int sizeInBytesAsParam() {
-            throw new RuntimeException("Implementiraj ...");
+            return Constants.WordSize;
         }
 
         @Override
