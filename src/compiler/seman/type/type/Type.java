@@ -180,12 +180,12 @@ public abstract class Type {
 
         @Override
         public int sizeInBytes() {
-            return (size * type.sizeInBytes());
+            return size * type.sizeInBytes();
         }
 
         @Override
         public int sizeInBytesAsParam() {
-            return Constants.WordSize;
+            return this.type.sizeInBytesAsParam();
         }
 
         public int elementSizeInBytes() {
@@ -196,7 +196,7 @@ public abstract class Type {
         public boolean equals(Type t) {
             return t.isArray() && t.asArray().isPresent() &&
                     t.asArray().get().size == this.size &&
-                    t.asArray().get().type == this.type;
+                    this.type.equals(t.asArray().get().type);
         }
 
         @Override

@@ -17,6 +17,15 @@ import compiler.parser.ast.type.TypeName;
 import compiler.seman.common.NodeDescription;
 import compiler.seman.type.type.Type;
 
+import compiler.frm.Frame.Builder;
+import compiler.frm.Frame.Label;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Stack;
+
+import common.Constants;
+
 public class FrameEvaluator implements Visitor {
     /**
      * Opis definicij funkcij in njihovih klicnih zapisov.
@@ -38,38 +47,32 @@ public class FrameEvaluator implements Visitor {
      */
     private final NodeDescription<Type> types;
 
+    private int staticLevel = 1;
+    private Stack<Frame.Builder> stack = new Stack<Frame.Builder>();
 
-    /**
-     * Števca za statični nivo in skladovni offset
-     */
-    private int staticLevel;
-    private int stackOffset;
-
+ 
     public FrameEvaluator(
-        NodeDescription<Frame> frames, 
-        NodeDescription<Access> accesses,
-        NodeDescription<Def> definitions,
-        NodeDescription<Type> types
-    ) {
+            NodeDescription<Frame> frames,
+            NodeDescription<Access> accesses,
+            NodeDescription<Def> definitions,
+            NodeDescription<Type> types) {
         requireNonNull(frames, accesses, definitions, types);
         this.frames = frames;
         this.accesses = accesses;
         this.definitions = definitions;
         this.types = types;
-
-        this.staticLevel = 1;
-        this.stackOffset = 0;
     }
 
     @Override
     public void visit(Call call) {
-        if (staticLevel == 1)
-            accesses.store(new Access.Global(types.valueFor(definitions.valueFor(call).get()).get().sizeInBytes(), frames.valueFor(definitions.valueFor(call).get()).get().label), call);
-        else
-            accesses.store(new Access.Local(types.valueFor(definitions.valueFor(call).get()).get().sizeInBytes(), stackOffset, staticLevel), call);
-
+        Frame.Builder f = stack.pop();
+        int size = Constants.WordSize;
+        for (Expr arg : call.arguments) {
+            size += types.valueFor(arg).get().sizeInBytesAsParam();
+        }
+        f.addFunctionCall(size);
+        stack.push(f);
     }
-
 
     @Override
     public void visit(Binary binary) {
@@ -77,14 +80,12 @@ public class FrameEvaluator implements Visitor {
         binary.right.accept(this);
     }
 
-
     @Override
     public void visit(Block block) {
-        for (Expr expr : block.expressions) {
+        block.expressions.forEach(expr -> {
             expr.accept(this);
-        }
+        });
     }
-
 
     @Override
     public void visit(For forLoop) {
@@ -95,35 +96,23 @@ public class FrameEvaluator implements Visitor {
         forLoop.body.accept(this);
     }
 
-
     @Override
-    public void visit(Name name) {
-        if (!accesses.valueFor(definitions.valueFor(name).get()).isPresent())
-            definitions.valueFor(name).get().accept(this);
-        
-        accesses.store(accesses.valueFor(definitions.valueFor(name).get()).get(), name);
-    }
-
+    public void visit(Name name) { /* do nothing */}
 
     @Override
     public void visit(IfThenElse ifThenElse) {
         ifThenElse.condition.accept(this);
         ifThenElse.thenExpression.accept(this);
-
-        if (ifThenElse.elseExpression.isPresent())
-            ifThenElse.elseExpression.get().accept(this);
+        ifThenElse.elseExpression.ifPresent((expr) -> expr.accept(this));
     }
-
 
     @Override
     public void visit(Literal literal) { /* do nothing */}
-
 
     @Override
     public void visit(Unary unary) {
         unary.expr.accept(this);
     }
-
 
     @Override
     public void visit(While whileLoop) {
@@ -131,75 +120,81 @@ public class FrameEvaluator implements Visitor {
         whileLoop.body.accept(this);
     }
 
-
     @Override
     public void visit(Where where) {
-        where.expr.accept(this);
         where.defs.accept(this);
+        where.expr.accept(this);
     }
-
 
     @Override
     public void visit(Defs defs) {
-        for (Def def : defs.definitions) {
+        defs.definitions.forEach(def -> {
             def.accept(this);
-        }
+        });
     }
-
 
     @Override
     public void visit(FunDef funDef) {
-        compiler.frm.Frame.Builder Builder = null;
+        Frame.Builder f;
 
-        if (staticLevel == 1)
-            Builder = new Frame.Builder(Frame.Label.named(funDef.name), staticLevel);
-        else
-            Builder = new Frame.Builder(Frame.Label.nextAnonymous(), staticLevel);
+        if (stack.empty()) {
+            f = new Frame.Builder(Frame.Label.named(funDef.name), staticLevel);
+            f.addParameter(Constants.WordSize);
+            stack.push(f);
 
-        for (Parameter param : funDef.parameters) {
-            param.accept(this);
-            Builder.addParameter(types.valueFor(param).get().sizeInBytesAsParam());
+            funDef.parameters.forEach((param) -> param.accept(this));
+
+            funDef.body.accept(this);
+
+            f = stack.pop();
+            frames.store(f.build(), funDef);
+        } else {
+            f = new Frame.Builder(Label.nextAnonymous(), ++staticLevel);
+            f.addParameter(Constants.WordSize);
+            stack.push(f);
+
+            funDef.parameters.forEach((param) -> param.accept(this));
+
+            funDef.body.accept(this);
+
+            f = stack.pop();
+            frames.store(f.build(), funDef);
+            staticLevel--;
         }
-
-        staticLevel++;
-        funDef.body.accept(this);
-        staticLevel--;
-
-        frames.store(Builder.build(), funDef);
     }
-
 
     @Override
     public void visit(TypeDef typeDef) { /* do nothing */}
 
-
     @Override
     public void visit(VarDef varDef) {
-        if (staticLevel == 1) {
-            accesses.store(new Access.Global(types.valueFor(varDef).get().sizeInBytes(), Frame.Label.named(varDef.name)), varDef);
-            return;
+        if (stack.empty()) {
+            accesses.store(new Access.Global(
+                types.valueFor(varDef).get().sizeInBytes(),
+                Frame.Label.named(varDef.name)
+            ),varDef);
+        } else {
+            Frame.Builder f = stack.pop();
+            int size = types.valueFor(varDef).get().sizeInBytes();
+            accesses.store(new Access.Local(size, f.addLocalVariable(size), staticLevel), varDef);
+            stack.push(f);
         }
-
-        accesses.store(new Access.Local(types.valueFor(varDef).get().sizeInBytes(), stackOffset, staticLevel), varDef);
-        stackOffset += types.valueFor(varDef).get().sizeInBytes();
     }
-
 
     @Override
     public void visit(Parameter parameter) {
-        accesses.store(new Access.Parameter(types.valueFor(parameter).get().sizeInBytesAsParam(), stackOffset, staticLevel), parameter);
-        stackOffset += types.valueFor(parameter).get().sizeInBytesAsParam();
+        Frame.Builder f = stack.pop();
+        int size = types.valueFor(parameter).get().sizeInBytesAsParam();
+        accesses.store(new Access.Parameter(size, f.addParameter(size), staticLevel), parameter);
+        stack.push(f);
     }
 
+    @Override
+    public void visit(Array array) { /* do nothing */ }
 
     @Override
-    public void visit(Array array) { /* do nothing */}
-
-
-    @Override
-    public void visit(Atom atom) { /* do nothing */}
-
+    public void visit(Atom atom) { /* do nothing */ }
 
     @Override
-    public void visit(TypeName name) { /* do nothing */}
+    public void visit(TypeName name) { /* do nothing */ }
 }
