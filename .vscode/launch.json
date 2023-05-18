@@ -6,14 +6,21 @@
     "configurations": [
         {
             "type": "java",
-            "name": "Launch specific phase",
+            "name": "Working on phase",
+            "request": "launch",
+            "mainClass": "Main",
+            "args": "PINS quickTest.pins23 --exec FRM --dump FRM"
+        },
+        {
+            "type": "java",
+            "name": "Specific phase",
             "request": "launch",
             "mainClass": "Main",
             "args": "PINS quickTest.pins23 --exec ${input:dump} --dump ${input:dump}"
         },
         {
             "type": "java",
-            "name": "Launch compiler",
+            "name": "Full compiler",
             "request": "launch",
             "mainClass": "Main",
             "args": "PINS quickTest.pins23"

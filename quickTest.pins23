@@ -1,13 +1,9 @@
-fun fib(n:int):int = (
-    { if n == 1 | n == 2 then
-    1+1
-    else (
-        { return = fib(n-1) + fib(n-2) }
-    )},
-    return
-);
-
-var return:int;
-typ int:integer;
-typ str:string;
-typ bool:logical
+fun thirdfunction(y: string):arr[10] string =
+(
+    {10*20=xyz},
+    ss
+)
+{ where
+    var xyz: integer;
+    var ss : arr[10] string
+}

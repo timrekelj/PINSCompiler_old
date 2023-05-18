@@ -142,8 +142,7 @@ public class TypeChecker implements Visitor {
         if (!types.valueFor(ifThenElse.condition).get().equals(new Type.Atom(Kind.LOG)))
             Report.error(ifThenElse.position, "Condition is not logical.");
         ifThenElse.thenExpression.accept(this);
-        if (ifThenElse.elseExpression.isPresent())
-            ifThenElse.elseExpression.get().accept(this);
+        ifThenElse.elseExpression.ifPresent((expr) -> expr.accept(this));
         types.store(new Type.Atom(Kind.VOID), ifThenElse);
     }
 
@@ -199,7 +198,7 @@ public class TypeChecker implements Visitor {
         funDef.parameters.forEach(parameter -> params.add(types.valueFor(parameter.type).get()));
         types.store(new Type.Function(params, types.valueFor(funDef.type).get()), funDef);
         funDef.body.accept(this);
-        if (!types.valueFor(funDef.body).get().equals(types.valueFor(funDef.type).get()))
+        if (!types.valueFor(funDef.type).get().equals(types.valueFor(funDef.body).get()))
             Report.error(funDef.position, "Function body does not match return type.");
     }
 

@@ -9,7 +9,6 @@ import static common.RequireNonNull.requireNonNull;
 
 import common.Report;
 import compiler.common.Visitor;
-import compiler.lexer.Position;
 import compiler.parser.ast.def.*;
 import compiler.parser.ast.def.FunDef.Parameter;
 import compiler.parser.ast.expr.*;
